@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: sample-cicd-springboot-gcp
+
+server:
+  port: ${PORT:8080}
+
+logging:
+  level:
+    root: INFO
+    com.example.demo: DEBUG
