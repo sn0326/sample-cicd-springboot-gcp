@@ -21,18 +21,3 @@ ENTRYPOINT ["java", \
   "-XX:+UseContainerSupport", \
   "-Djava.security.egd=file:/dev/./urandom", \
   "-jar", "app.jar"]
-```
-
-### .dockerignore
-```
-target/
-.git/
-.github/
-*.md
-.gitignore
-.mvn/
-mvnw
-mvnw.cmd
-.idea/
-*.iml
-.DS_Store
