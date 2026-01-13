@@ -20,7 +20,8 @@ class HelloController {
     
     @GetMapping("/")
     public String hello() {
-        return "🚀 Sample CI/CD: Spring Boot on GCP Cloud Run!";
+        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+        return "🚀 Sample CI/CD: Spring Boot on GCP Cloud Run!\nアクセス日時: " + timestamp;
     }
     
     @GetMapping("/health")
