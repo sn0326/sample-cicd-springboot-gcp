@@ -12,8 +12,8 @@
         <relativePath/>
     </parent>
     
-    <groupId>com.example</groupId>
-    <artifactId>demo</artifactId>
+    <groupId>com.sn0326</groupId>
+    <artifactId>cicddemo</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>demo</name>
     <description>Sample CI/CD Spring Boot on GCP</description>
