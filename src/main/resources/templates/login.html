@@ -4,43 +4,47 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ログイン - Spring Boot Demo</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <div class="login-container">
-        <div class="login-box">
-            <h1>🔐 ログイン</h1>
-            <p class="subtitle">Spring Security フォーム認証</p>
+<body class="min-h-screen flex items-center justify-center p-5 bg-gradient-to-br from-indigo-500 to-purple-600">
+    <div class="w-full max-w-md">
+        <div class="bg-white rounded-lg shadow-2xl p-10">
+            <h1 class="text-3xl font-bold text-gray-800 text-center mb-2">🔐 ログイン</h1>
+            <p class="text-sm text-gray-600 text-center mb-8">Spring Security フォーム認証</p>
 
-            <div th:if="${param.error}" class="alert alert-error">
+            <div th:if="${param.error}" class="bg-red-50 text-red-700 border border-red-200 rounded-md p-3 mb-5 text-sm">
                 ユーザー名またはパスワードが正しくありません。
             </div>
 
-            <div th:if="${param.logout}" class="alert alert-success">
+            <div th:if="${param.logout}" class="bg-green-50 text-green-700 border border-green-200 rounded-md p-3 mb-5 text-sm">
                 ログアウトしました。
             </div>
 
-            <form th:action="@{/login}" method="post" class="login-form">
-                <div class="form-group">
-                    <label for="username">ユーザー名</label>
+            <form th:action="@{/login}" method="post">
+                <div class="mb-5">
+                    <label for="username" class="block mb-2 text-gray-800 font-medium text-sm">ユーザー名</label>
                     <input type="text" id="username" name="username"
-                           placeholder="user または admin" required autofocus>
+                           placeholder="user または admin" required autofocus
+                           class="w-full px-4 py-3 border-2 border-gray-200 rounded-md text-sm focus:outline-none focus:border-indigo-500 transition-colors">
                 </div>
 
-                <div class="form-group">
-                    <label for="password">パスワード</label>
+                <div class="mb-5">
+                    <label for="password" class="block mb-2 text-gray-800 font-medium text-sm">パスワード</label>
                     <input type="password" id="password" name="password"
-                           placeholder="パスワード" required>
+                           placeholder="パスワード" required
+                           class="w-full px-4 py-3 border-2 border-gray-200 rounded-md text-sm focus:outline-none focus:border-indigo-500 transition-colors">
                 </div>
 
-                <button type="submit" class="btn-login">ログイン</button>
+                <button type="submit" class="w-full py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-md text-base font-semibold hover:-translate-y-0.5 transition-transform cursor-pointer border-0">
+                    ログイン
+                </button>
             </form>
 
-            <div class="demo-info">
-                <h3>デモアカウント</h3>
-                <ul>
-                    <li><strong>一般ユーザー:</strong> user / password</li>
-                    <li><strong>管理者:</strong> admin / admin</li>
+            <div class="mt-8 pt-5 border-t border-gray-200">
+                <h3 class="text-sm text-gray-600 mb-2.5">デモアカウント</h3>
+                <ul class="list-none">
+                    <li class="py-2 text-xs text-gray-700"><strong>一般ユーザー:</strong> user / password</li>
+                    <li class="py-2 text-xs text-gray-700"><strong>管理者:</strong> admin / admin</li>
                 </ul>
             </div>
         </div>
