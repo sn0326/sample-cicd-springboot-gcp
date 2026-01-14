@@ -14,8 +14,8 @@ gh issue create --repo sn0326/sample-cicd-springboot-gcp ...
 ```
 
 ### 理由
-- git remote: `http://127.0.0.1:59445/git/sn0326/sample-cicd-springboot-gcp`
-- `gh` CLIはこのローカルプロキシをGitHubホストとして認識できない
+- git remoteがローカルプロキシを指している場合があります
+- `gh` CLIはローカルプロキシをGitHubホストとして認識できない
 - `--repo` オプションで明示的にGitHubリポジトリを指定することで回避可能
 
 ## プロジェクト情報
