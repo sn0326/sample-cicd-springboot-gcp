@@ -1,7 +1,5 @@
 -- 初期ユーザーデータ
 -- パスワードはbcryptでエンコード済み
--- user: password = "password"
--- admin: password = "admin"
 
 INSERT INTO users (username, password, enabled) VALUES
 ('user', '{bcrypt}$2a$10$GRLdNijSQMUvl/au9ofL.eDwmoohzzS7.rmNSJZ.0FxO/BTk76klW', true),
