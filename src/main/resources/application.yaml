@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: sample-cicd-springboot-gcp
+
+  # JPA設定
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+
+  # SQL初期化設定
+  sql:
+    init:
+      mode: always
+
+server:
+  port: ${PORT:8080}
+
+logging:
+  level:
+    root: INFO
+    com.example.demo: DEBUG
+
+  # 構造化ロギング設定
+  structured:
+    format:
+      console: ecs  # Elastic Common Schema形式
+    ecs:
+      service:
+        name: ${spring.application.name}
+        version: 0.0.1-SNAPSHOT
+        environment: ${SPRING_PROFILES_ACTIVE:default}
