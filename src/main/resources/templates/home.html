@@ -5,43 +5,50 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ホーム - Spring Boot Demo</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <div class="container">
-        <header>
-            <h1>🚀 Spring Boot on GCP</h1>
-            <div class="user-info">
+<body class="min-h-screen flex items-center justify-center p-5 bg-gradient-to-br from-indigo-500 to-purple-600">
+    <div class="w-full max-w-3xl bg-white rounded-lg shadow-2xl overflow-hidden">
+        <header class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-8 flex justify-between items-center flex-wrap">
+            <h1 class="text-2xl font-bold mb-2.5">🚀 Spring Boot on GCP</h1>
+            <div class="flex items-center gap-4">
                 <span>ようこそ、<strong th:text="${username}">User</strong> さん</span>
-                <form th:action="@{/logout}" method="post" style="display: inline;">
-                    <button type="submit" class="btn-logout">ログアウト</button>
+                <form th:action="@{/logout}" method="post" class="inline">
+                    <button type="submit" class="bg-white/20 text-white border border-white px-4 py-2 rounded-md cursor-pointer text-sm hover:bg-white/30 transition-colors">
+                        ログアウト
+                    </button>
                 </form>
             </div>
         </header>
 
-        <main>
-            <div class="card">
-                <h2>認証成功！</h2>
-                <p>Spring Securityによるフォーム認証でログインしています。</p>
+        <main class="p-10">
+            <div class="mb-5">
+                <h2 class="text-gray-800 mb-4 text-2xl font-bold">認証成功！</h2>
+                <p class="text-gray-600 leading-relaxed mb-5">Spring Securityによるフォーム認証でログインしています。</p>
 
-                <div class="info-section">
-                    <h3>ユーザー情報</h3>
-                    <ul>
-                        <li><strong>ユーザー名:</strong> <span th:text="${username}">user</span></li>
-                        <li><strong>権限:</strong>
-                            <span th:each="auth : ${authorities}" class="badge" th:text="${auth}">ROLE</span>
+                <div class="bg-gray-50 p-5 rounded-lg my-5">
+                    <h3 class="text-gray-800 text-base mb-4">ユーザー情報</h3>
+                    <ul class="list-none">
+                        <li class="py-2 text-gray-700"><strong>ユーザー名:</strong> <span th:text="${username}">user</span></li>
+                        <li class="py-2 text-gray-700">
+                            <strong>権限:</strong>
+                            <span th:each="auth : ${authorities}" class="inline-block bg-indigo-500 text-white px-3 py-1 rounded-full text-xs mr-1" th:text="${auth}">ROLE</span>
                         </li>
                     </ul>
                 </div>
 
-                <div class="links">
-                    <a th:href="@{/info}" class="btn">アプリ情報 (REST API)</a>
-                    <a sec:authorize="hasRole('ADMIN')" th:href="@{/admin}" class="btn btn-admin">管理者ページ</a>
+                <div class="flex gap-4 mt-6 flex-wrap">
+                    <a th:href="@{/info}" class="px-6 py-3 bg-indigo-500 text-white no-underline rounded-md text-sm hover:bg-indigo-600 transition-colors inline-block">
+                        アプリ情報 (REST API)
+                    </a>
+                    <a sec:authorize="hasRole('ADMIN')" th:href="@{/admin}" class="px-6 py-3 bg-purple-600 text-white no-underline rounded-md text-sm hover:bg-purple-700 transition-colors inline-block">
+                        管理者ページ
+                    </a>
                 </div>
             </div>
         </main>
 
-        <footer>
+        <footer class="bg-gray-50 p-5 text-center text-gray-600 text-sm">
             <p>Spring Security Form Authentication Demo</p>
         </footer>
     </div>
