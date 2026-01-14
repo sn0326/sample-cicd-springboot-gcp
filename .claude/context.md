@@ -24,3 +24,22 @@ gh issue create --repo sn0326/sample-cicd-springboot-gcp ...
 - **Java バージョン**: 21
 - **Spring Boot バージョン**: 3.2.1
 - **デプロイ先**: Google Cloud Run (asia-northeast1)
+
+## アーキテクチャ
+
+### パッケージ構成
+
+```
+com.sn0326.cicddemo/
+├── DemoApplication.java        # @SpringBootApplication メインクラス
+├── controller/                 # REST Controller層
+│   └── HelloController.java   # @RestController - API エンドポイント
+└── model/                      # データモデル層
+    └── AppInfo.java           # record - DTO
+```
+
+### 設計方針
+
+- **レイヤー分離**: Controller、Model を専用パッケージに配置
+- **Spring Boot ベストプラクティス**: パッケージ構造を標準的な設計に準拠
+- **保守性**: 各レイヤーの責任を明確に分離し、拡張しやすい構造を維持
