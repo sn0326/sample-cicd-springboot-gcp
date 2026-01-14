@@ -2,6 +2,20 @@ spring:
   application:
     name: sample-cicd-springboot-gcp
 
+  # JPA設定
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+
+  # SQL初期化設定
+  sql:
+    init:
+      mode: always
+
 server:
   port: ${PORT:8080}
 
