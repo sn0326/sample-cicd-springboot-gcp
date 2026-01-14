@@ -6,7 +6,7 @@
     <title>ログイン - Spring Boot Demo</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="min-h-screen flex items-center justify-center p-5 bg-gradient-to-br from-indigo-500 to-purple-600">
+<body class="min-h-screen flex items-center justify-center p-5 bg-gray-50">
     <div class="w-full max-w-md">
         <div class="bg-white rounded-lg shadow-2xl p-10">
             <h1 class="text-3xl font-bold text-gray-800 text-center mb-2">🔐 ログイン</h1>
@@ -25,17 +25,17 @@
                     <label for="username" class="block mb-2 text-gray-800 font-medium text-sm">ユーザー名</label>
                     <input type="text" id="username" name="username"
                            placeholder="user または admin" required autofocus
-                           class="w-full px-4 py-3 border-2 border-gray-200 rounded-md text-sm focus:outline-none focus:border-indigo-500 transition-colors">
+                           class="w-full px-4 py-3 border-2 border-gray-200 rounded-md text-sm focus:outline-none focus:border-slate-400 transition-colors">
                 </div>
 
                 <div class="mb-5">
                     <label for="password" class="block mb-2 text-gray-800 font-medium text-sm">パスワード</label>
                     <input type="password" id="password" name="password"
                            placeholder="パスワード" required
-                           class="w-full px-4 py-3 border-2 border-gray-200 rounded-md text-sm focus:outline-none focus:border-indigo-500 transition-colors">
+                           class="w-full px-4 py-3 border-2 border-gray-200 rounded-md text-sm focus:outline-none focus:border-slate-400 transition-colors">
                 </div>
 
-                <button type="submit" class="w-full py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-md text-base font-semibold hover:-translate-y-0.5 transition-transform cursor-pointer border-0">
+                <button type="submit" class="w-full py-3 bg-slate-700 text-white rounded-md text-base font-semibold hover:bg-slate-800 transition-colors cursor-pointer border-0">
                     ログイン
                 </button>
             </form>
