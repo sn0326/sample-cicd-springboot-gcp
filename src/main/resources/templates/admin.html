@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理者ページ - Spring Boot Demo</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔧 管理者ページ</h1>
+            <div class="user-info">
+                <span><strong th:text="${username}">Admin</strong> (管理者)</span>
+                <form th:action="@{/logout}" method="post" style="display: inline;">
+                    <button type="submit" class="btn-logout">ログアウト</button>
+                </form>
+            </div>
+        </header>
+
+        <main>
+            <div class="card admin-card">
+                <h2>管理者専用エリア</h2>
+                <p>このページは管理者権限を持つユーザーのみアクセスできます。</p>
+
+                <div class="admin-section">
+                    <h3>システム情報</h3>
+                    <ul>
+                        <li>Spring Boot バージョン: 4.0.1</li>
+                        <li>Spring Security 有効</li>
+                        <li>認証方式: フォーム認証</li>
+                    </ul>
+                </div>
+
+                <div class="links">
+                    <a th:href="@{/home}" class="btn">ホームに戻る</a>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>Spring Security Form Authentication Demo - Admin Area</p>
+        </footer>
+    </div>
+</body>
+</html>

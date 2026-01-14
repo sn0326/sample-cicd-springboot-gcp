@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ホーム - Spring Boot Demo</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 Spring Boot on GCP</h1>
+            <div class="user-info">
+                <span>ようこそ、<strong th:text="${username}">User</strong> さん</span>
+                <form th:action="@{/logout}" method="post" style="display: inline;">
+                    <button type="submit" class="btn-logout">ログアウト</button>
+                </form>
+            </div>
+        </header>
+
+        <main>
+            <div class="card">
+                <h2>認証成功！</h2>
+                <p>Spring Securityによるフォーム認証でログインしています。</p>
+
+                <div class="info-section">
+                    <h3>ユーザー情報</h3>
+                    <ul>
+                        <li><strong>ユーザー名:</strong> <span th:text="${username}">user</span></li>
+                        <li><strong>権限:</strong>
+                            <span th:each="auth : ${authorities}" class="badge" th:text="${auth}">ROLE</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="links">
+                    <a th:href="@{/info}" class="btn">アプリ情報 (REST API)</a>
+                    <a sec:authorize="hasRole('ADMIN')" th:href="@{/admin}" class="btn btn-admin">管理者ページ</a>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>Spring Security Form Authentication Demo</p>
+        </footer>
+    </div>
+</body>
+</html>
