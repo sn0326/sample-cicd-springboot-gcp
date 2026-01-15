@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ユーザー管理 - Spring Boot Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-gray-50 p-5">
+    <div class="w-full max-w-6xl mx-auto">
+        <div class="bg-white rounded-lg shadow-2xl overflow-hidden">
+            <header class="bg-slate-800 text-white p-8 flex justify-between items-center flex-wrap">
+                <h1 class="text-2xl font-bold mb-2.5">👥 ユーザー管理</h1>
+                <div class="flex items-center gap-4">
+                    <span>管理者: <strong th:text="${#authentication.name}">Admin</strong></span>
+                    <a th:href="@{/home}" class="bg-white/20 text-white border border-white px-4 py-2 rounded-md cursor-pointer text-sm hover:bg-white/30 transition-colors no-underline">
+                        ホームに戻る
+                    </a>
+                </div>
+            </header>
+
+            <main class="p-10">
+                <!-- 成功メッセージ -->
+                <div th:if="${success}" class="bg-green-50 text-green-700 border border-green-200 rounded-md p-3 mb-5 text-sm">
+                    <span th:text="${success}">成功メッセージ</span>
+                </div>
+
+                <!-- エラーメッセージ -->
+                <div th:if="${error}" class="bg-red-50 text-red-700 border border-red-200 rounded-md p-3 mb-5 text-sm">
+                    <span th:text="${error}">エラーメッセージ</span>
+                </div>
+
+                <!-- ユーザー追加ボタン -->
+                <div class="mb-6 flex justify-between items-center">
+                    <h2 class="text-2xl font-bold text-gray-800">ユーザー一覧</h2>
+                    <a th:href="@{/admin/users/new}" class="px-6 py-3 bg-blue-600 text-white no-underline rounded-md text-sm hover:bg-blue-700 transition-colors inline-block">
+                        ➕ 新規ユーザー追加
+                    </a>
+                </div>
+
+                <!-- ユーザーテーブル -->
+                <div class="overflow-x-auto">
+                    <table class="w-full border-collapse">
+                        <thead>
+                            <tr class="bg-gray-100">
+                                <th class="border border-gray-300 px-4 py-3 text-left font-semibold text-gray-700">ユーザー名</th>
+                                <th class="border border-gray-300 px-4 py-3 text-left font-semibold text-gray-700">状態</th>
+                                <th class="border border-gray-300 px-4 py-3 text-left font-semibold text-gray-700">ロール</th>
+                                <th class="border border-gray-300 px-4 py-3 text-center font-semibold text-gray-700">アクション</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="user : ${users}" class="hover:bg-gray-50">
+                                <td class="border border-gray-300 px-4 py-3 text-gray-800 font-medium" th:text="${user.username}">username</td>
+                                <td class="border border-gray-300 px-4 py-3">
+                                    <span th:if="${user.enabled}" class="inline-block bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold">
+                                        ✓ 有効
+                                    </span>
+                                    <span th:unless="${user.enabled}" class="inline-block bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-semibold">
+                                        ✗ 無効
+                                    </span>
+                                </td>
+                                <td class="border border-gray-300 px-4 py-3">
+                                    <span th:each="authority : ${user.authorities}"
+                                          class="inline-block bg-slate-600 text-white px-3 py-1 rounded-full text-xs mr-1"
+                                          th:text="${authority}">ROLE</span>
+                                </td>
+                                <td class="border border-gray-300 px-4 py-3 text-center">
+                                    <div class="flex gap-2 justify-center flex-wrap">
+                                        <!-- パスワードリセット -->
+                                        <a th:href="@{/admin/users/{username}/reset-password(username=${user.username})}"
+                                           class="px-3 py-1 bg-yellow-600 text-white no-underline rounded text-xs hover:bg-yellow-700 transition-colors">
+                                            🔑 パスワードリセット
+                                        </a>
+
+                                        <!-- 有効化/無効化 -->
+                                        <form th:if="${!user.enabled}"
+                                              th:action="@{/admin/users/{username}/enable(username=${user.username})}"
+                                              method="post" class="inline">
+                                            <button type="submit"
+                                                    class="px-3 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700 transition-colors cursor-pointer border-0">
+                                                ✓ 有効化
+                                            </button>
+                                        </form>
+
+                                        <form th:if="${user.enabled}"
+                                              th:action="@{/admin/users/{username}/disable(username=${user.username})}"
+                                              method="post"
+                                              class="inline"
+                                              th:onsubmit="return confirm('ユーザー \'' + [[${user.username}]] + '\' を無効化しますか？');">
+                                            <button type="submit"
+                                                    class="px-3 py-1 bg-orange-600 text-white rounded text-xs hover:bg-orange-700 transition-colors cursor-pointer border-0">
+                                                ⊘ 無効化
+                                            </button>
+                                        </form>
+
+                                        <!-- 削除 -->
+                                        <form th:action="@{/admin/users/{username}/delete(username=${user.username})}"
+                                              method="post"
+                                              class="inline"
+                                              th:onsubmit="return confirm('ユーザー \'' + [[${user.username}]] + '\' を削除しますか？この操作は取り消せません。');">
+                                            <button type="submit"
+                                                    class="px-3 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700 transition-colors cursor-pointer border-0">
+                                                🗑️ 削除
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div th:if="${#lists.isEmpty(users)}" class="text-center text-gray-500 py-10">
+                    <p>ユーザーが登録されていません。</p>
+                </div>
+            </main>
+
+            <footer class="bg-gray-50 p-5 text-center text-gray-600 text-sm">
+                <p>ユーザー数: <strong th:text="${#lists.size(users)}">0</strong> 人</p>
+            </footer>
+        </div>
+    </div>
+</body>
+</html>

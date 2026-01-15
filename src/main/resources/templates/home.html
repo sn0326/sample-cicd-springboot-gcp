@@ -51,6 +51,9 @@
                     <a sec:authorize="hasRole('ADMIN')" th:href="@{/admin}" class="px-6 py-3 bg-slate-700 text-white no-underline rounded-md text-sm hover:bg-slate-800 transition-colors inline-block">
                         管理者ページ
                     </a>
+                    <a sec:authorize="hasRole('ADMIN')" th:href="@{/admin/users}" class="px-6 py-3 bg-purple-600 text-white no-underline rounded-md text-sm hover:bg-purple-700 transition-colors inline-block">
+                        👥 ユーザー管理
+                    </a>
                 </div>
             </div>
         </main>

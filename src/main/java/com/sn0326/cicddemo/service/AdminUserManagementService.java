@@ -1,0 +1,192 @@
+package com.sn0326.cicddemo.service;
+
+import com.sn0326.cicddemo.dto.UserInfo;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.provisioning.JdbcUserDetailsManager;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+public class AdminUserManagementService {
+
+    private final JdbcUserDetailsManager userDetailsManager;
+    private final PasswordEncoder passwordEncoder;
+    private final JdbcTemplate jdbcTemplate;
+
+    public AdminUserManagementService(JdbcUserDetailsManager userDetailsManager,
+                                      PasswordEncoder passwordEncoder,
+                                      JdbcTemplate jdbcTemplate) {
+        this.userDetailsManager = userDetailsManager;
+        this.passwordEncoder = passwordEncoder;
+        this.jdbcTemplate = jdbcTemplate;
+    }
+
+    /**
+     * ユーザー一覧を取得
+     */
+    public List<UserInfo> getAllUsers() {
+        String sql = "SELECT username, enabled FROM users ORDER BY username";
+        return jdbcTemplate.query(sql, (rs, rowNum) -> {
+            String username = rs.getString("username");
+            boolean enabled = rs.getBoolean("enabled");
+            List<String> authorities = getAuthoritiesByUsername(username);
+            return new UserInfo(username, enabled, authorities);
+        });
+    }
+
+    /**
+     * 特定のユーザー情報を取得
+     */
+    public UserInfo getUserInfo(String username) {
+        if (!userDetailsManager.userExists(username)) {
+            throw new IllegalArgumentException("ユーザーが存在しません: " + username);
+        }
+
+        UserDetails userDetails = userDetailsManager.loadUserByUsername(username);
+        List<String> authorities = userDetails.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toList());
+
+        return new UserInfo(username, userDetails.isEnabled(), authorities);
+    }
+
+    /**
+     * 新しいユーザーを作成
+     */
+    @Transactional
+    public void createUser(String username, String password, List<String> roles, boolean enabled) {
+        // バリデーション
+        if (username == null || username.trim().isEmpty()) {
+            throw new IllegalArgumentException("ユーザー名は必須です");
+        }
+        if (password == null || password.length() < 8) {
+            throw new IllegalArgumentException("パスワードは8文字以上必要です");
+        }
+        if (userDetailsManager.userExists(username)) {
+            throw new IllegalArgumentException("ユーザー名 '" + username + "' は既に存在します");
+        }
+        if (roles == null || roles.isEmpty()) {
+            throw new IllegalArgumentException("少なくとも1つのロールを選択してください");
+        }
+
+        // 権限リストを作成
+        List<GrantedAuthority> authorities = roles.stream()
+                .map(role -> role.startsWith("ROLE_") ? role : "ROLE_" + role)
+                .map(SimpleGrantedAuthority::new)
+                .collect(Collectors.toList());
+
+        // UserDetailsオブジェクトを作成
+        UserDetails user = User.builder()
+                .username(username)
+                .password(passwordEncoder.encode(password))
+                .disabled(!enabled)
+                .authorities(authorities)
+                .build();
+
+        // ユーザーを作成
+        userDetailsManager.createUser(user);
+    }
+
+    /**
+     * ユーザーを削除
+     */
+    @Transactional
+    public void deleteUser(String username, String currentUsername) {
+        // 自分自身を削除できないようにする
+        if (username.equals(currentUsername)) {
+            throw new IllegalArgumentException("自分自身を削除することはできません");
+        }
+
+        if (!userDetailsManager.userExists(username)) {
+            throw new IllegalArgumentException("ユーザーが存在しません: " + username);
+        }
+
+        userDetailsManager.deleteUser(username);
+    }
+
+    /**
+     * パスワードをリセット（管理者用）
+     */
+    @Transactional
+    public void resetPassword(String username, String newPassword) {
+        if (!userDetailsManager.userExists(username)) {
+            throw new IllegalArgumentException("ユーザーが存在しません: " + username);
+        }
+        if (newPassword == null || newPassword.length() < 8) {
+            throw new IllegalArgumentException("パスワードは8文字以上必要です");
+        }
+
+        // 既存のユーザー情報を取得
+        UserDetails existingUser = userDetailsManager.loadUserByUsername(username);
+
+        // パスワードのみを更新した新しいUserDetailsを作成
+        UserDetails updatedUser = User.builder()
+                .username(existingUser.getUsername())
+                .password(passwordEncoder.encode(newPassword))
+                .disabled(!existingUser.isEnabled())
+                .authorities(existingUser.getAuthorities())
+                .build();
+
+        userDetailsManager.updateUser(updatedUser);
+    }
+
+    /**
+     * ユーザーを有効化
+     */
+    @Transactional
+    public void enableUser(String username) {
+        updateUserEnabledStatus(username, true);
+    }
+
+    /**
+     * ユーザーを無効化
+     */
+    @Transactional
+    public void disableUser(String username, String currentUsername) {
+        // 自分自身を無効化できないようにする
+        if (username.equals(currentUsername)) {
+            throw new IllegalArgumentException("自分自身を無効化することはできません");
+        }
+
+        updateUserEnabledStatus(username, false);
+    }
+
+    /**
+     * ユーザーの有効/無効状態を更新
+     */
+    private void updateUserEnabledStatus(String username, boolean enabled) {
+        if (!userDetailsManager.userExists(username)) {
+            throw new IllegalArgumentException("ユーザーが存在しません: " + username);
+        }
+
+        // 既存のユーザー情報を取得
+        UserDetails existingUser = userDetailsManager.loadUserByUsername(username);
+
+        // 有効/無効状態のみを更新した新しいUserDetailsを作成
+        UserDetails updatedUser = User.builder()
+                .username(existingUser.getUsername())
+                .password(existingUser.getPassword())
+                .disabled(!enabled)
+                .authorities(existingUser.getAuthorities())
+                .build();
+
+        userDetailsManager.updateUser(updatedUser);
+    }
+
+    /**
+     * ユーザー名から権限リストを取得
+     */
+    private List<String> getAuthoritiesByUsername(String username) {
+        String sql = "SELECT authority FROM authorities WHERE username = ? ORDER BY authority";
+        return jdbcTemplate.query(sql, (rs, rowNum) -> rs.getString("authority"), username);
+    }
+}
