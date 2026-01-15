@@ -35,6 +35,8 @@ spring:
 
 server:
   port: ${PORT:8080}
+  # X-Forwarded-*ヘッダーを考慮してHTTPSリダイレクトURIを正しく生成
+  forward-headers-strategy: framework
 
 logging:
   level:
