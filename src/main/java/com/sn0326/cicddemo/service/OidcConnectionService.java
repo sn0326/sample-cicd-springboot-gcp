@@ -4,7 +4,6 @@ import com.sn0326.cicddemo.dto.OidcConnectionInfo;
 import com.sn0326.cicddemo.model.OidcProvider;
 import com.sn0326.cicddemo.model.UserOidcConnection;
 import com.sn0326.cicddemo.repository.UserOidcConnectionRepository;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.security.provisioning.JdbcUserDetailsManager;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,7 +23,7 @@ public class OidcConnectionService {
 
     public OidcConnectionService(
             UserOidcConnectionRepository oidcConnectionRepository,
-            @Lazy JdbcUserDetailsManager userDetailsManager) {
+            JdbcUserDetailsManager userDetailsManager) {
         this.oidcConnectionRepository = oidcConnectionRepository;
         this.userDetailsManager = userDetailsManager;
     }
