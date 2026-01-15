@@ -54,3 +54,9 @@ logging:
         name: ${spring.application.name}
         version: 0.0.1-SNAPSHOT
         environment: ${SPRING_PROFILES_ACTIVE:default}
+
+# パスワードポリシー設定（NIST SP 800-63B準拠）
+password:
+  min-length: 8           # 最小文字数
+  max-length: 64          # 最大文字数
+  max-consecutive-chars: 3  # 同じ文字の最大連続数
