@@ -2,6 +2,7 @@ package com.sn0326.cicddemo.security;
 
 import com.sn0326.cicddemo.model.OidcProvider;
 import com.sn0326.cicddemo.service.OidcConnectionService;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -13,8 +14,11 @@ import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.provisioning.JdbcUserDetailsManager;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Optional;
 
 /**
@@ -57,7 +61,21 @@ public class CustomOidcUserService extends OidcUserService {
         String providerId = oidcUser.getSubject();
         String email = oidcUser.getEmail();
 
-        // 既存の連携を検索
+        // セッションから連携モードかどうかを確認
+        boolean isConnectionMode = isConnectionMode();
+
+        if (isConnectionMode) {
+            // 連携モード: 既存の連携チェックをスキップし、OidcAuthenticationSuccessHandlerで処理
+            // 一時的な権限でOIDCユーザーを返す（実際の権限はSuccessHandlerで処理後に適用される）
+            return new DefaultOidcUser(
+                    Collections.singleton(new SimpleGrantedAuthority("ROLE_USER")),
+                    oidcUser.getIdToken(),
+                    oidcUser.getUserInfo(),
+                    "sub"
+            );
+        }
+
+        // ログインモード: 既存の連携を検索
         Optional<String> usernameOpt = oidcConnectionService.findUsernameByProviderId(provider, providerId);
 
         if (usernameOpt.isEmpty()) {
@@ -81,5 +99,24 @@ public class CustomOidcUserService extends OidcUserService {
                 oidcUser.getUserInfo(),
                 "sub"  // nameAttributeKey
         );
+    }
+
+    /**
+     * セッションから連携モードかどうかを確認
+     */
+    private boolean isConnectionMode() {
+        try {
+            ServletRequestAttributes attributes =
+                    (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+            if (attributes != null) {
+                HttpSession session = attributes.getRequest().getSession(false);
+                if (session != null) {
+                    return Boolean.TRUE.equals(session.getAttribute("oidc_connection_mode"));
+                }
+            }
+        } catch (Exception e) {
+            // セッション取得に失敗した場合は連携モードではないとみなす
+        }
+        return false;
     }
 }
