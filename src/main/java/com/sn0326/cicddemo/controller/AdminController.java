@@ -4,6 +4,7 @@ import com.sn0326.cicddemo.dto.AdminResetPasswordRequest;
 import com.sn0326.cicddemo.dto.CreateUserRequest;
 import com.sn0326.cicddemo.dto.UserInfo;
 import com.sn0326.cicddemo.service.AdminUserManagementService;
+import com.sn0326.cicddemo.service.LastLoginService;
 import jakarta.validation.Valid;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -12,7 +13,9 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Controller
@@ -20,18 +23,30 @@ import java.util.stream.Collectors;
 public class AdminController {
 
     private final AdminUserManagementService adminUserManagementService;
+    private final LastLoginService lastLoginService;
 
-    public AdminController(AdminUserManagementService adminUserManagementService) {
+    public AdminController(
+            AdminUserManagementService adminUserManagementService,
+            LastLoginService lastLoginService) {
         this.adminUserManagementService = adminUserManagementService;
+        this.lastLoginService = lastLoginService;
     }
 
     /**
      * ユーザー一覧ページ
      */
     @GetMapping("/users")
-    public String listUsers(Model model) {
+    public String listUsers(Model model, Authentication authentication) {
         List<UserInfo> users = adminUserManagementService.getAllUsers();
         model.addAttribute("users", users);
+
+        // 現在ログインしているユーザーの前回ログイン日時を取得
+        if (authentication != null) {
+            String username = authentication.getName();
+            Optional<LocalDateTime> lastLogin = lastLoginService.getLastLogin(username);
+            lastLogin.ifPresent(dateTime -> model.addAttribute("lastLogin", dateTime));
+        }
+
         return "admin/users";
     }
 

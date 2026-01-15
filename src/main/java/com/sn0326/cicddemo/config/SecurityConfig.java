@@ -1,6 +1,7 @@
 package com.sn0326.cicddemo.config;
 
 import com.sn0326.cicddemo.security.CustomOidcUserService;
+import com.sn0326.cicddemo.security.FormAuthenticationSuccessHandler;
 import com.sn0326.cicddemo.security.OidcAuthenticationFailureHandler;
 import com.sn0326.cicddemo.security.OidcAuthenticationSuccessHandler;
 import org.springframework.context.annotation.Bean;
@@ -12,14 +13,17 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
     private final CustomOidcUserService customOidcUserService;
+    private final FormAuthenticationSuccessHandler formAuthenticationSuccessHandler;
     private final OidcAuthenticationSuccessHandler oidcAuthenticationSuccessHandler;
     private final OidcAuthenticationFailureHandler oidcAuthenticationFailureHandler;
 
     public SecurityConfig(
             CustomOidcUserService customOidcUserService,
+            FormAuthenticationSuccessHandler formAuthenticationSuccessHandler,
             OidcAuthenticationSuccessHandler oidcAuthenticationSuccessHandler,
             OidcAuthenticationFailureHandler oidcAuthenticationFailureHandler) {
         this.customOidcUserService = customOidcUserService;
+        this.formAuthenticationSuccessHandler = formAuthenticationSuccessHandler;
         this.oidcAuthenticationSuccessHandler = oidcAuthenticationSuccessHandler;
         this.oidcAuthenticationFailureHandler = oidcAuthenticationFailureHandler;
     }
@@ -35,7 +39,7 @@ public class SecurityConfig {
             )
             .formLogin(form -> form
                 .loginPage("/login")
-                .defaultSuccessUrl("/home", true)
+                .successHandler(formAuthenticationSuccessHandler)
                 .permitAll()
             )
             .oauth2Login(oauth2 -> oauth2

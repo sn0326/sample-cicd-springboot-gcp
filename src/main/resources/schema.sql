@@ -30,3 +30,20 @@ CREATE TABLE IF NOT EXISTS user_oidc_connections (
 
 CREATE INDEX IF NOT EXISTS idx_oidc_username ON user_oidc_connections(username);
 CREATE INDEX IF NOT EXISTS idx_oidc_provider_id ON user_oidc_connections(provider, provider_id);
+
+-- ログインテーブル
+CREATE TABLE IF NOT EXISTS user_logins (
+    id              SERIAL PRIMARY KEY,
+    username        VARCHAR(50) NOT NULL,
+    logged_in_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    login_method    VARCHAR(20) NOT NULL,     -- 'FORM' or 'OIDC'
+    oidc_provider   VARCHAR(20),              -- 'google' (OIDCの場合のみ)
+    ip_address      VARCHAR(45),              -- IPv4/IPv6対応
+    user_agent      VARCHAR(500),
+    success         BOOLEAN NOT NULL DEFAULT true,
+    CONSTRAINT fk_user_logins_users FOREIGN KEY(username) REFERENCES users(username) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_logins_username ON user_logins(username);
+CREATE INDEX IF NOT EXISTS idx_user_logins_logged_in_at ON user_logins(logged_in_at DESC);
+CREATE INDEX IF NOT EXISTS idx_user_logins_username_logged_in_at ON user_logins(username, logged_in_at DESC);

@@ -2,6 +2,7 @@ package com.sn0326.cicddemo.security;
 
 import com.sn0326.cicddemo.model.OidcProvider;
 import com.sn0326.cicddemo.service.OidcConnectionService;
+import com.sn0326.cicddemo.service.LastLoginService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -21,9 +22,13 @@ import java.io.IOException;
 public class OidcAuthenticationSuccessHandler extends SavedRequestAwareAuthenticationSuccessHandler {
 
     private final OidcConnectionService oidcConnectionService;
+    private final LastLoginService lastLoginService;
 
-    public OidcAuthenticationSuccessHandler(OidcConnectionService oidcConnectionService) {
+    public OidcAuthenticationSuccessHandler(
+            OidcConnectionService oidcConnectionService,
+            LastLoginService lastLoginService) {
         this.oidcConnectionService = oidcConnectionService;
+        this.lastLoginService = lastLoginService;
         setDefaultTargetUrl("/home");
     }
 
@@ -43,6 +48,15 @@ public class OidcAuthenticationSuccessHandler extends SavedRequestAwareAuthentic
             handleConnectionMode(request, response, (OAuth2AuthenticationToken) authentication);
         } else {
             // ログインモード: OIDCでログインしている
+            if (authentication instanceof OAuth2AuthenticationToken) {
+                OAuth2AuthenticationToken oauth2Token = (OAuth2AuthenticationToken) authentication;
+                String username = authentication.getName();
+                String registrationId = oauth2Token.getAuthorizedClientRegistrationId();
+
+                // ログイン履歴を記録
+                lastLoginService.recordLogin(username, "OIDC", registrationId, request);
+            }
+
             super.onAuthenticationSuccess(request, response, authentication);
         }
     }

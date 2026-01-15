@@ -2,6 +2,7 @@ package com.sn0326.cicddemo.controller;
 
 import com.sn0326.cicddemo.dto.OidcConnectionInfo;
 import com.sn0326.cicddemo.model.OidcProvider;
+import com.sn0326.cicddemo.service.LastLoginService;
 import com.sn0326.cicddemo.service.OidcConnectionService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -14,7 +15,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * ユーザープロフィールとOIDC連携管理を行うコントローラー
@@ -24,9 +27,13 @@ import java.util.List;
 public class ProfileController {
 
     private final OidcConnectionService oidcConnectionService;
+    private final LastLoginService lastLoginService;
 
-    public ProfileController(OidcConnectionService oidcConnectionService) {
+    public ProfileController(
+            OidcConnectionService oidcConnectionService,
+            LastLoginService lastLoginService) {
         this.oidcConnectionService = oidcConnectionService;
+        this.lastLoginService = lastLoginService;
     }
 
     /**
@@ -41,6 +48,10 @@ public class ProfileController {
 
         String username = authentication.getName();
         model.addAttribute("username", username);
+
+        // 前回ログイン日時を取得
+        Optional<LocalDateTime> lastLogin = lastLoginService.getLastLogin(username);
+        lastLogin.ifPresent(dateTime -> model.addAttribute("lastLogin", dateTime));
 
         // OIDC連携情報を取得
         List<OidcConnectionInfo> connections = oidcConnectionService.getUserConnections(username);

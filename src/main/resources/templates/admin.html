@@ -11,7 +11,12 @@
         <header class="bg-slate-800 text-white p-8 flex justify-between items-center flex-wrap">
             <h1 class="text-2xl font-bold mb-2.5">🔧 管理者ページ</h1>
             <div class="flex items-center gap-4">
-                <span><strong th:text="${username}">Admin</strong> (管理者)</span>
+                <span>
+                    <strong th:text="${username}">Admin</strong> (管理者)
+                    <span th:if="${lastLogin}" class="text-sm text-gray-300 block">
+                        前回ログイン: <span th:text="${#temporals.format(lastLogin, 'yyyy/MM/dd HH:mm')}"></span>
+                    </span>
+                </span>
                 <form th:action="@{/logout}" method="post" class="inline">
                     <button type="submit" class="bg-white/20 text-white border border-white px-4 py-2 rounded-md cursor-pointer text-sm hover:bg-white/30 transition-colors">
                         ログアウト
