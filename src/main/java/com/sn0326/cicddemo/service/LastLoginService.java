@@ -1,6 +1,7 @@
 package com.sn0326.cicddemo.service;
 
-import org.springframework.jdbc.core.JdbcTemplate;
+import com.sn0326.cicddemo.model.UserLogin;
+import com.sn0326.cicddemo.repository.UserLoginRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,10 +15,10 @@ import java.util.Optional;
 @Service
 public class LastLoginService {
 
-    private final JdbcTemplate jdbcTemplate;
+    private final UserLoginRepository userLoginRepository;
 
-    public LastLoginService(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
+    public LastLoginService(UserLoginRepository userLoginRepository) {
+        this.userLoginRepository = userLoginRepository;
     }
 
     /**
@@ -33,10 +34,8 @@ public class LastLoginService {
         String ipAddress = getClientIpAddress(request);
         String userAgent = request.getHeader("User-Agent");
 
-        String sql = "INSERT INTO user_logins (username, login_method, oidc_provider, ip_address, user_agent, success) " +
-                     "VALUES (?, ?, ?, ?, ?, true)";
-
-        jdbcTemplate.update(sql, username, loginMethod, oidcProvider, ipAddress, userAgent);
+        UserLogin userLogin = new UserLogin(username, loginMethod, oidcProvider, ipAddress, userAgent);
+        userLoginRepository.save(userLogin);
     }
 
     /**
@@ -46,13 +45,8 @@ public class LastLoginService {
      * @return 前回ログイン日時（存在しない場合はOptional.empty()）
      */
     public Optional<LocalDateTime> getLastLogin(String username) {
-        String sql = "SELECT logged_in_at FROM user_logins " +
-                     "WHERE username = ? AND success = true " +
-                     "ORDER BY logged_in_at DESC " +
-                     "LIMIT 1 OFFSET 1";
-
         try {
-            LocalDateTime lastLogin = jdbcTemplate.queryForObject(sql, LocalDateTime.class, username);
+            LocalDateTime lastLogin = userLoginRepository.findLastLoginTime(username);
             return Optional.ofNullable(lastLogin);
         } catch (Exception e) {
             // データが存在しない場合
