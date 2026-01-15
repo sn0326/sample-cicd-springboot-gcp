@@ -31,19 +31,19 @@ CREATE TABLE IF NOT EXISTS user_oidc_connections (
 CREATE INDEX IF NOT EXISTS idx_oidc_username ON user_oidc_connections(username);
 CREATE INDEX IF NOT EXISTS idx_oidc_provider_id ON user_oidc_connections(provider, provider_id);
 
--- ログイン履歴テーブル
-CREATE TABLE IF NOT EXISTS user_login_history (
+-- ログインテーブル
+CREATE TABLE IF NOT EXISTS user_logins (
     id              SERIAL PRIMARY KEY,
     username        VARCHAR(50) NOT NULL,
-    login_at        TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    logged_in_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     login_method    VARCHAR(20) NOT NULL,     -- 'FORM' or 'OIDC'
     oidc_provider   VARCHAR(20),              -- 'google' (OIDCの場合のみ)
     ip_address      VARCHAR(45),              -- IPv4/IPv6対応
     user_agent      VARCHAR(500),
     success         BOOLEAN NOT NULL DEFAULT true,
-    CONSTRAINT fk_login_history_users FOREIGN KEY(username) REFERENCES users(username) ON DELETE CASCADE
+    CONSTRAINT fk_user_logins_users FOREIGN KEY(username) REFERENCES users(username) ON DELETE CASCADE
 );
 
-CREATE INDEX IF NOT EXISTS idx_login_history_username ON user_login_history(username);
-CREATE INDEX IF NOT EXISTS idx_login_history_login_at ON user_login_history(login_at DESC);
-CREATE INDEX IF NOT EXISTS idx_login_history_username_login_at ON user_login_history(username, login_at DESC);
+CREATE INDEX IF NOT EXISTS idx_user_logins_username ON user_logins(username);
+CREATE INDEX IF NOT EXISTS idx_user_logins_logged_in_at ON user_logins(logged_in_at DESC);
+CREATE INDEX IF NOT EXISTS idx_user_logins_username_logged_in_at ON user_logins(username, logged_in_at DESC);

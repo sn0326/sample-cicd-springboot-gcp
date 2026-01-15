@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 /**
- * ログイン履歴を管理するサービス
+ * ログインを管理するサービス
  */
 @Service
 public class LastLoginService {
@@ -21,7 +21,7 @@ public class LastLoginService {
     }
 
     /**
-     * ログイン履歴を記録する
+     * ログインを記録する
      *
      * @param username ユーザー名
      * @param loginMethod ログイン方式 ("FORM" or "OIDC")
@@ -33,7 +33,7 @@ public class LastLoginService {
         String ipAddress = getClientIpAddress(request);
         String userAgent = request.getHeader("User-Agent");
 
-        String sql = "INSERT INTO user_login_history (username, login_method, oidc_provider, ip_address, user_agent, success) " +
+        String sql = "INSERT INTO user_logins (username, login_method, oidc_provider, ip_address, user_agent, success) " +
                      "VALUES (?, ?, ?, ?, ?, true)";
 
         jdbcTemplate.update(sql, username, loginMethod, oidcProvider, ipAddress, userAgent);
@@ -46,9 +46,9 @@ public class LastLoginService {
      * @return 前回ログイン日時（存在しない場合はOptional.empty()）
      */
     public Optional<LocalDateTime> getLastLogin(String username) {
-        String sql = "SELECT login_at FROM user_login_history " +
+        String sql = "SELECT logged_in_at FROM user_logins " +
                      "WHERE username = ? AND success = true " +
-                     "ORDER BY login_at DESC " +
+                     "ORDER BY logged_in_at DESC " +
                      "LIMIT 1 OFFSET 1";
 
         try {
