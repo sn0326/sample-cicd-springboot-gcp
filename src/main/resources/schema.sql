@@ -47,3 +47,14 @@ CREATE TABLE IF NOT EXISTS user_logins (
 CREATE INDEX IF NOT EXISTS idx_user_logins_username ON user_logins(username);
 CREATE INDEX IF NOT EXISTS idx_user_logins_logged_in_at ON user_logins(logged_in_at DESC);
 CREATE INDEX IF NOT EXISTS idx_user_logins_username_logged_in_at ON user_logins(username, logged_in_at DESC);
+
+-- 弱いパスワードテーブル（NIST SP 800-63B準拠）
+CREATE TABLE IF NOT EXISTS weak_passwords (
+    id SERIAL PRIMARY KEY,
+    password VARCHAR(255) NOT NULL UNIQUE,
+    description VARCHAR(500),
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_weak_passwords_password ON weak_passwords(password);
