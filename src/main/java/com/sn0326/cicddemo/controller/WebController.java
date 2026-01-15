@@ -78,11 +78,6 @@ public class WebController {
                 return "redirect:/change-password";
             }
 
-            if (request.getNewPassword().length() < 4) {
-                redirectAttributes.addFlashAttribute("error", "パスワードは4文字以上である必要があります");
-                return "redirect:/change-password";
-            }
-
             passwordChangeService.changePassword(
                     authentication.getName(),
                     request.getCurrentPassword(),
