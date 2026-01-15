@@ -4,13 +4,16 @@ import com.sn0326.cicddemo.dto.AdminResetPasswordRequest;
 import com.sn0326.cicddemo.dto.CreateUserRequest;
 import com.sn0326.cicddemo.dto.UserInfo;
 import com.sn0326.cicddemo.service.AdminUserManagementService;
+import jakarta.validation.Valid;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/admin")
@@ -45,15 +48,24 @@ public class AdminController {
      * ユーザー作成処理
      */
     @PostMapping("/users")
-    public String createUser(@ModelAttribute CreateUserRequest request,
+    public String createUser(@Valid @ModelAttribute CreateUserRequest request,
+                           BindingResult bindingResult,
+                           Model model,
                            RedirectAttributes redirectAttributes) {
-        try {
-            // パスワード一致確認
-            if (!request.getPassword().equals(request.getConfirmPassword())) {
-                redirectAttributes.addFlashAttribute("error", "パスワードが一致しません");
-                return "redirect:/admin/users/new";
-            }
+        // バリデーションエラーチェック
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("createUserRequest", request);
+            return "admin/user-create";
+        }
 
+        // パスワード一致確認
+        if (!request.getPassword().equals(request.getConfirmPassword())) {
+            bindingResult.rejectValue("confirmPassword", "error.confirmPassword", "パスワードが一致しません");
+            model.addAttribute("createUserRequest", request);
+            return "admin/user-create";
+        }
+
+        try {
             adminUserManagementService.createUser(
                     request.getUsername(),
                     request.getPassword(),
@@ -66,8 +78,9 @@ public class AdminController {
             return "redirect:/admin/users";
 
         } catch (IllegalArgumentException e) {
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
-            return "redirect:/admin/users/new";
+            model.addAttribute("error", e.getMessage());
+            model.addAttribute("createUserRequest", request);
+            return "admin/user-create";
         }
     }
 
@@ -109,13 +122,25 @@ public class AdminController {
      */
     @PostMapping("/users/{username}/reset-password")
     public String resetPassword(@PathVariable String username,
-                              @ModelAttribute AdminResetPasswordRequest request,
+                              @Valid @ModelAttribute AdminResetPasswordRequest request,
+                              BindingResult bindingResult,
+                              Model model,
                               RedirectAttributes redirectAttributes) {
         try {
+            UserInfo userInfo = adminUserManagementService.getUserInfo(username);
+            model.addAttribute("userInfo", userInfo);
+
+            // バリデーションエラーチェック
+            if (bindingResult.hasErrors()) {
+                model.addAttribute("resetPasswordRequest", request);
+                return "admin/user-reset-password";
+            }
+
             // パスワード一致確認
             if (!request.getNewPassword().equals(request.getConfirmPassword())) {
-                redirectAttributes.addFlashAttribute("error", "パスワードが一致しません");
-                return "redirect:/admin/users/" + username + "/reset-password";
+                bindingResult.rejectValue("confirmPassword", "error.confirmPassword", "パスワードが一致しません");
+                model.addAttribute("resetPasswordRequest", request);
+                return "admin/user-reset-password";
             }
 
             adminUserManagementService.resetPassword(username, request.getNewPassword());
@@ -124,8 +149,9 @@ public class AdminController {
             return "redirect:/admin/users";
 
         } catch (IllegalArgumentException e) {
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
-            return "redirect:/admin/users/" + username + "/reset-password";
+            model.addAttribute("error", e.getMessage());
+            model.addAttribute("resetPasswordRequest", request);
+            return "admin/user-reset-password";
         }
     }
 
