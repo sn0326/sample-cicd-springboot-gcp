@@ -35,7 +35,12 @@
             <div class="mb-8">
                 <h2 class="text-gray-800 mb-4 text-2xl font-bold">アカウント情報</h2>
                 <div class="bg-gray-50 p-5 rounded-lg">
-                    <p class="py-2 text-gray-700"><strong>ユーザー名:</strong> <span th:text="${username}">user</span></p>
+                    <p class="py-2 text-gray-700">
+                        <strong>ユーザー名:</strong> <span th:text="${username}">user</span>
+                        <span th:if="${lastLogin}" class="text-sm text-gray-500">
+                            | 前回ログイン: <span th:text="${#temporals.format(lastLogin, 'yyyy/MM/dd HH:mm')}"></span>
+                        </span>
+                    </p>
                 </div>
             </div>
 

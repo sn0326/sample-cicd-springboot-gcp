@@ -1,6 +1,7 @@
 package com.sn0326.cicddemo.controller;
 
 import com.sn0326.cicddemo.dto.ChangePasswordRequest;
+import com.sn0326.cicddemo.service.LastLoginService;
 import com.sn0326.cicddemo.service.PasswordChangeService;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -10,13 +11,20 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.time.LocalDateTime;
+import java.util.Optional;
+
 @Controller
 public class WebController {
 
     private final PasswordChangeService passwordChangeService;
+    private final LastLoginService lastLoginService;
 
-    public WebController(PasswordChangeService passwordChangeService) {
+    public WebController(
+            PasswordChangeService passwordChangeService,
+            LastLoginService lastLoginService) {
         this.passwordChangeService = passwordChangeService;
+        this.lastLoginService = lastLoginService;
     }
 
     @GetMapping("/login")
@@ -27,8 +35,13 @@ public class WebController {
     @GetMapping("/home")
     public String home(Model model, Authentication authentication) {
         if (authentication != null) {
-            model.addAttribute("username", authentication.getName());
+            String username = authentication.getName();
+            model.addAttribute("username", username);
             model.addAttribute("authorities", authentication.getAuthorities());
+
+            // 前回ログイン日時を取得
+            Optional<LocalDateTime> lastLogin = lastLoginService.getLastLogin(username);
+            lastLogin.ifPresent(dateTime -> model.addAttribute("lastLogin", dateTime));
         }
         return "home";
     }
@@ -36,7 +49,12 @@ public class WebController {
     @GetMapping("/admin")
     public String admin(Model model, Authentication authentication) {
         if (authentication != null) {
-            model.addAttribute("username", authentication.getName());
+            String username = authentication.getName();
+            model.addAttribute("username", username);
+
+            // 前回ログイン日時を取得
+            Optional<LocalDateTime> lastLogin = lastLoginService.getLastLogin(username);
+            lastLogin.ifPresent(dateTime -> model.addAttribute("lastLogin", dateTime));
         }
         return "admin";
     }
