@@ -1,6 +1,10 @@
 package com.sn0326.cicddemo.model;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.time.LocalDateTime;
 
 /**
@@ -8,6 +12,9 @@ import java.time.LocalDateTime;
  */
 @Entity
 @Table(name = "user_oidc_connections")
+@Getter
+@Setter
+@NoArgsConstructor
 public class UserOidcConnection {
 
     @Id
@@ -46,79 +53,10 @@ public class UserOidcConnection {
         updatedAt = LocalDateTime.now();
     }
 
-    // Constructors
-    public UserOidcConnection() {
-    }
-
     public UserOidcConnection(String username, String provider, String providerId, String email) {
         this.username = username;
         this.provider = provider;
         this.providerId = providerId;
         this.email = email;
-    }
-
-    // Getters and Setters
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getProvider() {
-        return provider;
-    }
-
-    public void setProvider(String provider) {
-        this.provider = provider;
-    }
-
-    public String getProviderId() {
-        return providerId;
-    }
-
-    public void setProviderId(String providerId) {
-        this.providerId = providerId;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public boolean isEnabled() {
-        return enabled;
-    }
-
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
     }
 }
