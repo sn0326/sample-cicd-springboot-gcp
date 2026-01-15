@@ -72,9 +72,9 @@ public class CustomOidcUserService extends OidcUserService {
             // セッションからローカルユーザー名を取得
             String connectingUsername = getConnectingUsername();
 
-            // ローカルユーザー名をクレームに追加
+            // ローカルユーザー名をクレームに追加（カスタムクレーム名を使用）
             Map<String, Object> claims = new HashMap<>(oidcUser.getUserInfo().getClaims());
-            claims.put("preferred_username", connectingUsername);
+            claims.put("local_username", connectingUsername);
             OidcUserInfo userInfo = new OidcUserInfo(claims);
 
             // 一時的な権限でOIDCユーザーを返す（実際の権限はSuccessHandlerで処理後に適用される）
@@ -82,7 +82,7 @@ public class CustomOidcUserService extends OidcUserService {
                     Collections.singleton(new SimpleGrantedAuthority("ROLE_USER")),
                     oidcUser.getIdToken(),
                     userInfo,
-                    "preferred_username"
+                    "local_username"
             );
         }
 
@@ -103,9 +103,9 @@ public class CustomOidcUserService extends OidcUserService {
         UserDetails userDetails = userDetailsManager.loadUserByUsername(username);
         Collection<? extends GrantedAuthority> authorities = userDetails.getAuthorities();
 
-        // ローカルユーザー名をクレームに追加
+        // ローカルユーザー名をクレームに追加（カスタムクレーム名を使用）
         Map<String, Object> claims = new HashMap<>(oidcUser.getUserInfo().getClaims());
-        claims.put("preferred_username", username);
+        claims.put("local_username", username);
         OidcUserInfo userInfo = new OidcUserInfo(claims);
 
         // ローカルユーザーの権限を持つOIDCユーザーオブジェクトを返す
@@ -113,7 +113,7 @@ public class CustomOidcUserService extends OidcUserService {
                 authorities,
                 oidcUser.getIdToken(),
                 userInfo,
-                "preferred_username"  // nameAttributeKey
+                "local_username"  // nameAttributeKey
         );
     }
 
