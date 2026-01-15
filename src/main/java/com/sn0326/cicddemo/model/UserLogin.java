@@ -1,6 +1,10 @@
 package com.sn0326.cicddemo.model;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.time.LocalDateTime;
 
 /**
@@ -8,6 +12,9 @@ import java.time.LocalDateTime;
  */
 @Entity
 @Table(name = "user_logins")
+@Getter
+@Setter
+@NoArgsConstructor
 public class UserLogin {
 
     @Id
@@ -42,10 +49,6 @@ public class UserLogin {
         }
     }
 
-    // Constructors
-    public UserLogin() {
-    }
-
     public UserLogin(String username, String loginMethod, String oidcProvider, String ipAddress, String userAgent) {
         this.username = username;
         this.loginMethod = loginMethod;
@@ -53,70 +56,5 @@ public class UserLogin {
         this.ipAddress = ipAddress;
         this.userAgent = userAgent;
         this.success = true;
-    }
-
-    // Getters and Setters
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public LocalDateTime getLoggedInAt() {
-        return loggedInAt;
-    }
-
-    public void setLoggedInAt(LocalDateTime loggedInAt) {
-        this.loggedInAt = loggedInAt;
-    }
-
-    public String getLoginMethod() {
-        return loginMethod;
-    }
-
-    public void setLoginMethod(String loginMethod) {
-        this.loginMethod = loginMethod;
-    }
-
-    public String getOidcProvider() {
-        return oidcProvider;
-    }
-
-    public void setOidcProvider(String oidcProvider) {
-        this.oidcProvider = oidcProvider;
-    }
-
-    public String getIpAddress() {
-        return ipAddress;
-    }
-
-    public void setIpAddress(String ipAddress) {
-        this.ipAddress = ipAddress;
-    }
-
-    public String getUserAgent() {
-        return userAgent;
-    }
-
-    public void setUserAgent(String userAgent) {
-        this.userAgent = userAgent;
-    }
-
-    public boolean isSuccess() {
-        return success;
-    }
-
-    public void setSuccess(boolean success) {
-        this.success = success;
     }
 }
