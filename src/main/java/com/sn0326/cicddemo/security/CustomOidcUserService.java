@@ -10,6 +10,7 @@ import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2Error;
+import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
 import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.provisioning.JdbcUserDetailsManager;
@@ -19,6 +20,8 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -66,12 +69,20 @@ public class CustomOidcUserService extends OidcUserService {
 
         if (isConnectionMode) {
             // 連携モード: 既存の連携チェックをスキップし、OidcAuthenticationSuccessHandlerで処理
+            // セッションからローカルユーザー名を取得
+            String connectingUsername = getConnectingUsername();
+
+            // ローカルユーザー名をクレームに追加
+            Map<String, Object> claims = new HashMap<>(oidcUser.getUserInfo().getClaims());
+            claims.put("preferred_username", connectingUsername);
+            OidcUserInfo userInfo = new OidcUserInfo(claims);
+
             // 一時的な権限でOIDCユーザーを返す（実際の権限はSuccessHandlerで処理後に適用される）
             return new DefaultOidcUser(
                     Collections.singleton(new SimpleGrantedAuthority("ROLE_USER")),
                     oidcUser.getIdToken(),
-                    oidcUser.getUserInfo(),
-                    "sub"
+                    userInfo,
+                    "preferred_username"
             );
         }
 
@@ -92,12 +103,17 @@ public class CustomOidcUserService extends OidcUserService {
         UserDetails userDetails = userDetailsManager.loadUserByUsername(username);
         Collection<? extends GrantedAuthority> authorities = userDetails.getAuthorities();
 
+        // ローカルユーザー名をクレームに追加
+        Map<String, Object> claims = new HashMap<>(oidcUser.getUserInfo().getClaims());
+        claims.put("preferred_username", username);
+        OidcUserInfo userInfo = new OidcUserInfo(claims);
+
         // ローカルユーザーの権限を持つOIDCユーザーオブジェクトを返す
         return new DefaultOidcUser(
                 authorities,
                 oidcUser.getIdToken(),
-                oidcUser.getUserInfo(),
-                "sub"  // nameAttributeKey
+                userInfo,
+                "preferred_username"  // nameAttributeKey
         );
     }
 
@@ -118,5 +134,27 @@ public class CustomOidcUserService extends OidcUserService {
             // セッション取得に失敗した場合は連携モードではないとみなす
         }
         return false;
+    }
+
+    /**
+     * セッションから連携中のローカルユーザー名を取得
+     */
+    private String getConnectingUsername() {
+        try {
+            ServletRequestAttributes attributes =
+                    (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+            if (attributes != null) {
+                HttpSession session = attributes.getRequest().getSession(false);
+                if (session != null) {
+                    Object username = session.getAttribute("connecting_username");
+                    if (username instanceof String) {
+                        return (String) username;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // セッション取得に失敗した場合はnullを返す
+        }
+        return null;
     }
 }
