@@ -24,15 +24,18 @@ public class AdminUserManagementService {
     private final PasswordEncoder passwordEncoder;
     private final JdbcTemplate jdbcTemplate;
     private final SecurityNotificationService notificationService;
+    private final ForcePasswordChangeService forcePasswordChangeService;
 
     public AdminUserManagementService(JdbcUserDetailsManager userDetailsManager,
                                       PasswordEncoder passwordEncoder,
                                       JdbcTemplate jdbcTemplate,
-                                      SecurityNotificationService notificationService) {
+                                      SecurityNotificationService notificationService,
+                                      ForcePasswordChangeService forcePasswordChangeService) {
         this.userDetailsManager = userDetailsManager;
         this.passwordEncoder = passwordEncoder;
         this.jdbcTemplate = jdbcTemplate;
         this.notificationService = notificationService;
+        this.forcePasswordChangeService = forcePasswordChangeService;
     }
 
     /**
@@ -99,6 +102,9 @@ public class AdminUserManagementService {
 
         // ユーザーを作成
         userDetailsManager.createUser(user);
+
+        // 初期パスワードのため、パスワード変更を要求
+        forcePasswordChangeService.requirePasswordChange(username, "Initial password");
     }
 
     /**
@@ -142,6 +148,9 @@ public class AdminUserManagementService {
                 .build();
 
         userDetailsManager.updateUser(updatedUser);
+
+        // リセットされたパスワードは仮パスワードのため、パスワード変更を要求
+        forcePasswordChangeService.requirePasswordChange(username, "Password reset by admin");
 
         // パスワードリセット通知を送信
         // TODO: 実際のメールアドレスを取得する（現在はusersテーブルにemailカラムがないため仮のアドレスを使用）

@@ -1,5 +1,6 @@
 package com.sn0326.cicddemo.security;
 
+import com.sn0326.cicddemo.service.ForcePasswordChangeService;
 import com.sn0326.cicddemo.service.LastLoginService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -17,9 +18,13 @@ import java.io.IOException;
 public class FormAuthenticationSuccessHandler extends SavedRequestAwareAuthenticationSuccessHandler {
 
     private final LastLoginService lastLoginService;
+    private final ForcePasswordChangeService forcePasswordChangeService;
 
-    public FormAuthenticationSuccessHandler(LastLoginService lastLoginService) {
+    public FormAuthenticationSuccessHandler(
+            LastLoginService lastLoginService,
+            ForcePasswordChangeService forcePasswordChangeService) {
         this.lastLoginService = lastLoginService;
+        this.forcePasswordChangeService = forcePasswordChangeService;
         setDefaultTargetUrl("/home");
     }
 
@@ -32,6 +37,12 @@ public class FormAuthenticationSuccessHandler extends SavedRequestAwareAuthentic
         // ログイン履歴を記録
         String username = authentication.getName();
         lastLoginService.recordLogin(username, "FORM", null, request);
+
+        // パスワード変更が必要な場合は専用ページへリダイレクト
+        if (forcePasswordChangeService.isPasswordChangeRequired(username)) {
+            getRedirectStrategy().sendRedirect(request, response, "/force-change-password");
+            return;
+        }
 
         // デフォルトの成功処理（リダイレクト）を実行
         super.onAuthenticationSuccess(request, response, authentication);
