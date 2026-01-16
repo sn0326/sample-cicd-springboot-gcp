@@ -1,9 +1,11 @@
 package com.sn0326.cicddemo.service;
 
 import com.sn0326.cicddemo.dto.UserInfo;
+import com.sn0326.cicddemo.service.notification.SecurityNotificationService;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -21,13 +23,16 @@ public class AdminUserManagementService {
     private final JdbcUserDetailsManager userDetailsManager;
     private final PasswordEncoder passwordEncoder;
     private final JdbcTemplate jdbcTemplate;
+    private final SecurityNotificationService notificationService;
 
     public AdminUserManagementService(JdbcUserDetailsManager userDetailsManager,
                                       PasswordEncoder passwordEncoder,
-                                      JdbcTemplate jdbcTemplate) {
+                                      JdbcTemplate jdbcTemplate,
+                                      SecurityNotificationService notificationService) {
         this.userDetailsManager = userDetailsManager;
         this.passwordEncoder = passwordEncoder;
         this.jdbcTemplate = jdbcTemplate;
+        this.notificationService = notificationService;
     }
 
     /**
@@ -137,6 +142,12 @@ public class AdminUserManagementService {
                 .build();
 
         userDetailsManager.updateUser(updatedUser);
+
+        // パスワードリセット通知を送信
+        // TODO: 実際のメールアドレスを取得する（現在はusersテーブルにemailカラムがないため仮のアドレスを使用）
+        String email = username + "@example.com";
+        String resetBy = getCurrentUsername();
+        notificationService.sendPasswordResetNotification(username, email, newPassword, resetBy);
     }
 
     /**
@@ -145,6 +156,12 @@ public class AdminUserManagementService {
     @Transactional
     public void enableUser(String username) {
         updateUserEnabledStatus(username, true);
+
+        // アカウント有効化通知を送信
+        // TODO: 実際のメールアドレスを取得する（現在はusersテーブルにemailカラムがないため仮のアドレスを使用）
+        String email = username + "@example.com";
+        String enabledBy = getCurrentUsername();
+        notificationService.sendAccountEnabledNotification(username, email, enabledBy);
     }
 
     /**
@@ -158,6 +175,12 @@ public class AdminUserManagementService {
         }
 
         updateUserEnabledStatus(username, false);
+
+        // アカウント無効化通知を送信
+        // TODO: 実際のメールアドレスを取得する（現在はusersテーブルにemailカラムがないため仮のアドレスを使用）
+        String email = username + "@example.com";
+        String disabledBy = getCurrentUsername();
+        notificationService.sendAccountDisabledNotification(username, email, "管理者により無効化されました", disabledBy);
     }
 
     /**
@@ -188,5 +211,12 @@ public class AdminUserManagementService {
     private List<String> getAuthoritiesByUsername(String username) {
         String sql = "SELECT authority FROM authorities WHERE username = ? ORDER BY authority";
         return jdbcTemplate.query(sql, (rs, rowNum) -> rs.getString("authority"), username);
+    }
+
+    /**
+     * 現在ログイン中のユーザー名を取得
+     */
+    private String getCurrentUsername() {
+        return SecurityContextHolder.getContext().getAuthentication().getName();
     }
 }
