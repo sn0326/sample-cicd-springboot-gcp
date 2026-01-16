@@ -59,3 +59,13 @@ CREATE TABLE IF NOT EXISTS weak_passwords (
 );
 
 CREATE INDEX IF NOT EXISTS idx_weak_passwords_password ON weak_passwords(password);
+
+-- ログイン失敗記録テーブル（アカウントロックアウト機能）
+CREATE TABLE IF NOT EXISTS failed_authentications (
+    username VARCHAR(50) NOT NULL,
+    authentication_timestamp TIMESTAMP NOT NULL,
+    PRIMARY KEY (username, authentication_timestamp),
+    CONSTRAINT fk_failed_auth_users FOREIGN KEY(username) REFERENCES users(username) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_failed_auth_lookup ON failed_authentications(username, authentication_timestamp DESC);
