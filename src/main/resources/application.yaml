@@ -60,3 +60,26 @@ password:
   min-length: 8           # 最小文字数
   max-length: 64          # 最大文字数
   max-consecutive-chars: 3  # 同じ文字の最大連続数
+
+# メール送信設定
+mail:
+  # 送信プロバイダー（mock: モック実装、sendgrid: SendGrid実装）
+  provider: mock
+
+  # デフォルト送信元メールアドレス
+  from: noreply@example.com
+
+  # 非同期送信設定
+  async:
+    enabled: true          # 非同期送信を有効化
+    thread-pool-size: 5    # スレッドプールサイズ
+
+  # SendGrid設定（将来使用）
+  sendgrid:
+    api-key: ${SENDGRID_API_KEY:}
+
+  # モック設定
+  mock:
+    log-level: INFO        # ログレベル（INFO, DEBUG）
+    simulate-delay: false  # 遅延をシミュレートするか
+    delay-ms: 1000         # 遅延時間（ミリ秒）
