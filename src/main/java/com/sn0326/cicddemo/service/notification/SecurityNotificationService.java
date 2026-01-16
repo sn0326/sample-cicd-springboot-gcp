@@ -56,21 +56,11 @@ public class SecurityNotificationService {
             message.addMetadata("type", "password_reset");
             message.addMetadata("username", username);
 
-            mailSender.sendAsync(message)
-                    .thenAccept(result -> {
-                        if (result.isSuccess()) {
-                            log.info("パスワードリセット通知の送信成功: messageId={}", result.getMessageId());
-                        } else {
-                            log.error("パスワードリセット通知の送信失敗: {}", result.getErrorMessage());
-                        }
-                    })
-                    .exceptionally(e -> {
-                        log.error("パスワードリセット通知の送信中にエラーが発生しました", e);
-                        return null;
-                    });
+            var result = mailSender.send(message);
+            log.info("パスワードリセット通知の送信成功: messageId={}", result.getMessageId());
 
         } catch (Exception e) {
-            log.error("パスワードリセット通知の送信準備中にエラーが発生しました", e);
+            log.error("パスワードリセット通知の送信中にエラーが発生しました", e);
         }
     }
 
@@ -99,21 +89,11 @@ public class SecurityNotificationService {
             message.addMetadata("type", "password_changed");
             message.addMetadata("username", username);
 
-            mailSender.sendAsync(message)
-                    .thenAccept(result -> {
-                        if (result.isSuccess()) {
-                            log.info("パスワード変更通知の送信成功: messageId={}", result.getMessageId());
-                        } else {
-                            log.error("パスワード変更通知の送信失敗: {}", result.getErrorMessage());
-                        }
-                    })
-                    .exceptionally(e -> {
-                        log.error("パスワード変更通知の送信中にエラーが発生しました", e);
-                        return null;
-                    });
+            var result = mailSender.send(message);
+            log.info("パスワード変更通知の送信成功: messageId={}", result.getMessageId());
 
         } catch (Exception e) {
-            log.error("パスワード変更通知の送信準備中にエラーが発生しました", e);
+            log.error("パスワード変更通知の送信中にエラーが発生しました", e);
         }
     }
 
@@ -148,21 +128,11 @@ public class SecurityNotificationService {
             message.addMetadata("username", username);
             message.addMetadata("ipAddress", ipAddress);
 
-            mailSender.sendAsync(message)
-                    .thenAccept(result -> {
-                        if (result.isSuccess()) {
-                            log.info("不審なログイン通知の送信成功: messageId={}", result.getMessageId());
-                        } else {
-                            log.error("不審なログイン通知の送信失敗: {}", result.getErrorMessage());
-                        }
-                    })
-                    .exceptionally(e -> {
-                        log.error("不審なログイン通知の送信中にエラーが発生しました", e);
-                        return null;
-                    });
+            var result = mailSender.send(message);
+            log.info("不審なログイン通知の送信成功: messageId={}", result.getMessageId());
 
         } catch (Exception e) {
-            log.error("不審なログイン通知の送信準備中にエラーが発生しました", e);
+            log.error("不審なログイン通知の送信中にエラーが発生しました", e);
         }
     }
 
@@ -195,21 +165,11 @@ public class SecurityNotificationService {
             message.addMetadata("type", "account_disabled");
             message.addMetadata("username", username);
 
-            mailSender.sendAsync(message)
-                    .thenAccept(result -> {
-                        if (result.isSuccess()) {
-                            log.info("アカウント無効化通知の送信成功: messageId={}", result.getMessageId());
-                        } else {
-                            log.error("アカウント無効化通知の送信失敗: {}", result.getErrorMessage());
-                        }
-                    })
-                    .exceptionally(e -> {
-                        log.error("アカウント無効化通知の送信中にエラーが発生しました", e);
-                        return null;
-                    });
+            var result = mailSender.send(message);
+            log.info("アカウント無効化通知の送信成功: messageId={}", result.getMessageId());
 
         } catch (Exception e) {
-            log.error("アカウント無効化通知の送信準備中にエラーが発生しました", e);
+            log.error("アカウント無効化通知の送信中にエラーが発生しました", e);
         }
     }
 
@@ -239,21 +199,11 @@ public class SecurityNotificationService {
             message.addMetadata("type", "account_enabled");
             message.addMetadata("username", username);
 
-            mailSender.sendAsync(message)
-                    .thenAccept(result -> {
-                        if (result.isSuccess()) {
-                            log.info("アカウント有効化通知の送信成功: messageId={}", result.getMessageId());
-                        } else {
-                            log.error("アカウント有効化通知の送信失敗: {}", result.getErrorMessage());
-                        }
-                    })
-                    .exceptionally(e -> {
-                        log.error("アカウント有効化通知の送信中にエラーが発生しました", e);
-                        return null;
-                    });
+            var result = mailSender.send(message);
+            log.info("アカウント有効化通知の送信成功: messageId={}", result.getMessageId());
 
         } catch (Exception e) {
-            log.error("アカウント有効化通知の送信準備中にエラーが発生しました", e);
+            log.error("アカウント有効化通知の送信中にエラーが発生しました", e);
         }
     }
 }

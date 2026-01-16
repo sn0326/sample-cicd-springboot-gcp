@@ -69,11 +69,6 @@ mail:
   # デフォルト送信元メールアドレス
   from: noreply@example.com
 
-  # 非同期送信設定
-  async:
-    enabled: true          # 非同期送信を有効化
-    thread-pool-size: 5    # スレッドプールサイズ
-
   # SendGrid設定（将来使用）
   sendgrid:
     api-key: ${SENDGRID_API_KEY:}

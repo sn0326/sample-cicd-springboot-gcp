@@ -23,11 +23,6 @@ public class MailProperties {
     private String from = "noreply@example.com";
 
     /**
-     * 非同期送信設定
-     */
-    private Async async = new Async();
-
-    /**
      * SendGrid設定
      */
     private SendGrid sendgrid = new SendGrid();
@@ -36,19 +31,6 @@ public class MailProperties {
      * モック設定
      */
     private Mock mock = new Mock();
-
-    @Data
-    public static class Async {
-        /**
-         * 非同期送信を有効にするか
-         */
-        private boolean enabled = true;
-
-        /**
-         * スレッドプールサイズ
-         */
-        private int threadPoolSize = 5;
-    }
 
     @Data
     public static class SendGrid {

@@ -10,8 +10,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
 
 /**
  * メール送信のモック実装
@@ -24,7 +22,6 @@ import java.util.concurrent.Executor;
 public class MockMailSender implements MailSender {
 
     private final MailProperties mailProperties;
-    private final Executor mailExecutor;
 
     @Override
     public MailSendResult send(MailMessage message) {
@@ -52,15 +49,5 @@ public class MockMailSender implements MailSender {
 
         String messageId = "mock-" + UUID.randomUUID();
         return MailSendResult.success(messageId, message.getTo());
-    }
-
-    @Override
-    public CompletableFuture<MailSendResult> sendAsync(MailMessage message) {
-        return CompletableFuture.supplyAsync(() -> send(message), mailExecutor);
-    }
-
-    @Override
-    public boolean isAvailable() {
-        return true;
     }
 }
