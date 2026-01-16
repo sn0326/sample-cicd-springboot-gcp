@@ -61,6 +61,13 @@ password:
   max-length: 64          # 最大文字数
   max-consecutive-chars: 3  # 同じ文字の最大連続数
 
+# セキュリティ設定
+security:
+  account:
+    lockout:
+      max-attempts: 5           # 最大失敗回数
+      duration-minutes: 60      # ロック期間（分）
+
 # メール送信設定
 mail:
   # 送信プロバイダー（mock: モック実装、sendgrid: SendGrid実装）

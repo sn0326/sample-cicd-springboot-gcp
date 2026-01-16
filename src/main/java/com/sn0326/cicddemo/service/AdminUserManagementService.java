@@ -25,17 +25,20 @@ public class AdminUserManagementService {
     private final JdbcTemplate jdbcTemplate;
     private final SecurityNotificationService notificationService;
     private final ForcePasswordChangeService forcePasswordChangeService;
+    private final AccountLockoutService lockoutService;
 
     public AdminUserManagementService(JdbcUserDetailsManager userDetailsManager,
                                       PasswordEncoder passwordEncoder,
                                       JdbcTemplate jdbcTemplate,
                                       SecurityNotificationService notificationService,
-                                      ForcePasswordChangeService forcePasswordChangeService) {
+                                      ForcePasswordChangeService forcePasswordChangeService,
+                                      AccountLockoutService lockoutService) {
         this.userDetailsManager = userDetailsManager;
         this.passwordEncoder = passwordEncoder;
         this.jdbcTemplate = jdbcTemplate;
         this.notificationService = notificationService;
         this.forcePasswordChangeService = forcePasswordChangeService;
+        this.lockoutService = lockoutService;
     }
 
     /**
@@ -220,6 +223,29 @@ public class AdminUserManagementService {
     private List<String> getAuthoritiesByUsername(String username) {
         String sql = "SELECT authority FROM authorities WHERE username = ? ORDER BY authority";
         return jdbcTemplate.query(sql, (rs, rowNum) -> rs.getString("authority"), username);
+    }
+
+    /**
+     * アカウントのロックを解除（管理者用）
+     */
+    @Transactional
+    public void unlockAccount(String username) {
+        if (!userDetailsManager.userExists(username)) {
+            throw new IllegalArgumentException("ユーザーが存在しません: " + username);
+        }
+
+        lockoutService.unlockAccount(username);
+    }
+
+    /**
+     * アカウントのロック状態を確認
+     */
+    public boolean isAccountLocked(String username) {
+        if (!userDetailsManager.userExists(username)) {
+            throw new IllegalArgumentException("ユーザーが存在しません: " + username);
+        }
+
+        return lockoutService.isAccountLocked(username);
     }
 
     /**
