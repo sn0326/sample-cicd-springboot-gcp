@@ -43,7 +43,7 @@ logging:
   level:
     root: INFO
     com.sn0326.cicddemo: DEBUG
-    org.springframework.security: DEBUG
+    org.springframework.security: INFO
 
   # 構造化ロギング設定
   structured:
