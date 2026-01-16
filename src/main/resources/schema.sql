@@ -2,7 +2,8 @@
 CREATE TABLE IF NOT EXISTS users (
     username VARCHAR(50) NOT NULL PRIMARY KEY,
     password VARCHAR(500) NOT NULL,
-    enabled BOOLEAN NOT NULL
+    enabled BOOLEAN NOT NULL,
+    password_must_change BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 -- Spring Security標準の権限テーブル

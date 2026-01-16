@@ -15,16 +15,19 @@ public class PasswordChangeService {
     private final PasswordEncoder passwordEncoder;
     private final PasswordValidator passwordValidator;
     private final SecurityNotificationService notificationService;
+    private final ForcePasswordChangeService forcePasswordChangeService;
 
     public PasswordChangeService(
             JdbcUserDetailsManager userDetailsManager,
             PasswordEncoder passwordEncoder,
             PasswordValidator passwordValidator,
-            SecurityNotificationService notificationService) {
+            SecurityNotificationService notificationService,
+            ForcePasswordChangeService forcePasswordChangeService) {
         this.userDetailsManager = userDetailsManager;
         this.passwordEncoder = passwordEncoder;
         this.passwordValidator = passwordValidator;
         this.notificationService = notificationService;
+        this.forcePasswordChangeService = forcePasswordChangeService;
     }
 
     public void changePassword(String username, String currentPassword, String newPassword) {
@@ -44,6 +47,9 @@ public class PasswordChangeService {
 
         // パスワードを変更
         userDetailsManager.changePassword(currentPassword, passwordEncoder.encode(newPassword));
+
+        // パスワード変更要求フラグをクリア
+        forcePasswordChangeService.clearPasswordChangeRequirement(username);
 
         // パスワード変更通知を送信
         // TODO: 実際のメールアドレスを取得する（現在はusersテーブルにemailカラムがないため仮のアドレスを使用）
