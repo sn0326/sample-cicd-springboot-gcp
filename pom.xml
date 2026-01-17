@@ -47,6 +47,7 @@
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-webauthn</artifactId>
+            <version>7.0.2</version>
         </dependency>
 
         <dependency>
