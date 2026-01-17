@@ -1,5 +1,6 @@
 package com.sn0326.cicddemo.config;
 
+import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
@@ -8,6 +9,7 @@ import org.springframework.context.annotation.Configuration;
  *
  * application.yamlのsecurity.remember-me配下の設定を管理します。
  */
+@Data
 @Configuration
 @ConfigurationProperties(prefix = "security.remember-me")
 public class RememberMeProperties {
@@ -24,20 +26,4 @@ public class RememberMeProperties {
      * デフォルト: 30日
      */
     private int cleanupDays = 30;
-
-    public int getTokenValiditySeconds() {
-        return tokenValiditySeconds;
-    }
-
-    public void setTokenValiditySeconds(int tokenValiditySeconds) {
-        this.tokenValiditySeconds = tokenValiditySeconds;
-    }
-
-    public int getCleanupDays() {
-        return cleanupDays;
-    }
-
-    public void setCleanupDays(int cleanupDays) {
-        this.cleanupDays = cleanupDays;
-    }
 }
