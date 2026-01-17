@@ -12,13 +12,21 @@ import java.time.temporal.ChronoUnit;
 /**
  * Remember Meトークンの自動クリーンアップ機能を持つカスタムTokenRepository
  *
- * トークン取得/作成時に期限切れトークン（30日以上前）を自動削除します。
+ * トークン取得/作成時に期限切れトークンを自動削除します。
  * オンデマンド起動型アプリケーション向けの実装です。
  */
 public class CleanupJdbcTokenRepository extends JdbcTokenRepositoryImpl {
 
     private static final Logger log = LoggerFactory.getLogger(CleanupJdbcTokenRepository.class);
-    private static final int CLEANUP_DAYS = 30; // 30日以上前のトークンを削除
+    private final int cleanupDays;
+
+    /**
+     * コンストラクタ
+     * @param cleanupDays クリーンアップ対象となる日数（この日数以上前のトークンを削除）
+     */
+    public CleanupJdbcTokenRepository(int cleanupDays) {
+        this.cleanupDays = cleanupDays;
+    }
 
     /**
      * トークン取得時に期限切れトークンをクリーンアップ
@@ -41,19 +49,19 @@ public class CleanupJdbcTokenRepository extends JdbcTokenRepositoryImpl {
     /**
      * 期限切れトークンを削除
      *
-     * last_usedが30日以上前のトークンを削除します。
-     * Remember Me有効期限（14日）より余裕を持たせた期間を設定しています。
+     * last_usedが指定された日数以上前のトークンを削除します。
+     * Remember Me有効期限より余裕を持たせた期間を設定することを推奨します。
      */
     private void cleanupExpiredTokens() {
         try {
             String sql = "DELETE FROM persistent_logins WHERE last_used < ?";
-            Timestamp cutoffTime = Timestamp.from(Instant.now().minus(CLEANUP_DAYS, ChronoUnit.DAYS));
+            Timestamp cutoffTime = Timestamp.from(Instant.now().minus(cleanupDays, ChronoUnit.DAYS));
 
             int deletedCount = getJdbcTemplate().update(sql, cutoffTime);
 
             if (deletedCount > 0) {
                 log.info("Cleaned up {} expired remember-me tokens (older than {} days)",
-                        deletedCount, CLEANUP_DAYS);
+                        deletedCount, cleanupDays);
             }
         } catch (Exception e) {
             log.error("Failed to cleanup expired remember-me tokens", e);

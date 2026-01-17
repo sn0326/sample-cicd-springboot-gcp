@@ -67,6 +67,9 @@ security:
     lockout:
       max-attempts: 5           # 最大失敗回数
       duration-minutes: 60      # ロック期間（分）
+  remember-me:
+    token-validity-seconds: 1209600  # 14日間（2週間）
+    cleanup-days: 30                  # 30日以上前のトークンを削除
 
 # メール送信設定
 mail:
