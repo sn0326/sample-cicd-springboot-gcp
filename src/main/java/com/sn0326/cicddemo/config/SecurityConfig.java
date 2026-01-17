@@ -1,6 +1,7 @@
 package com.sn0326.cicddemo.config;
 
 import com.sn0326.cicddemo.security.AccountLockoutUserDetailsChecker;
+import com.sn0326.cicddemo.security.CleanupJdbcTokenRepository;
 import com.sn0326.cicddemo.security.CustomOidcUserService;
 import com.sn0326.cicddemo.security.FormAuthenticationFailureHandler;
 import com.sn0326.cicddemo.security.FormAuthenticationSuccessHandler;
@@ -15,6 +16,9 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
+
+import javax.sql.DataSource;
 
 @Configuration
 public class SecurityConfig {
@@ -26,6 +30,8 @@ public class SecurityConfig {
     private final OidcAuthenticationFailureHandler oidcAuthenticationFailureHandler;
     private final PasswordChangeRequiredFilter passwordChangeRequiredFilter;
     private final AccountLockoutUserDetailsChecker accountLockoutChecker;
+    private final DataSource dataSource;
+    private final RememberMeProperties rememberMeProperties;
 
     public SecurityConfig(
             CustomOidcUserService customOidcUserService,
@@ -34,7 +40,9 @@ public class SecurityConfig {
             OidcAuthenticationSuccessHandler oidcAuthenticationSuccessHandler,
             OidcAuthenticationFailureHandler oidcAuthenticationFailureHandler,
             PasswordChangeRequiredFilter passwordChangeRequiredFilter,
-            AccountLockoutUserDetailsChecker accountLockoutChecker) {
+            AccountLockoutUserDetailsChecker accountLockoutChecker,
+            DataSource dataSource,
+            RememberMeProperties rememberMeProperties) {
         this.customOidcUserService = customOidcUserService;
         this.formAuthenticationSuccessHandler = formAuthenticationSuccessHandler;
         this.formAuthenticationFailureHandler = formAuthenticationFailureHandler;
@@ -42,6 +50,8 @@ public class SecurityConfig {
         this.oidcAuthenticationFailureHandler = oidcAuthenticationFailureHandler;
         this.passwordChangeRequiredFilter = passwordChangeRequiredFilter;
         this.accountLockoutChecker = accountLockoutChecker;
+        this.dataSource = dataSource;
+        this.rememberMeProperties = rememberMeProperties;
     }
 
     @Bean
@@ -63,7 +73,15 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, DaoAuthenticationProvider daoAuthenticationProvider) throws Exception {
+    public PersistentTokenRepository persistentTokenRepository() {
+        CleanupJdbcTokenRepository tokenRepository = new CleanupJdbcTokenRepository(
+                rememberMeProperties.getCleanupDays());
+        tokenRepository.setDataSource(dataSource);
+        return tokenRepository;
+    }
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, DaoAuthenticationProvider daoAuthenticationProvider, PersistentTokenRepository persistentTokenRepository) throws Exception {
         http
             .authorizeHttpRequests(authorize -> authorize
                 .requestMatchers("/login", "/css/**", "/js/**").permitAll()
@@ -87,8 +105,17 @@ public class SecurityConfig {
                 .successHandler(oidcAuthenticationSuccessHandler)
                 .failureHandler(oidcAuthenticationFailureHandler)
             )
+            .rememberMe(rememberMe -> rememberMe
+                .key("cicddemo-remember-me-key")
+                .tokenRepository(persistentTokenRepository)
+                .tokenValiditySeconds(rememberMeProperties.getTokenValiditySeconds())
+                .rememberMeParameter("remember-me")
+                .rememberMeCookieName("remember-me")
+                .useSecureCookie(false)  // 開発環境用（本番環境ではtrueに設定）
+            )
             .logout(logout -> logout
                 .logoutSuccessUrl("/login?logout")
+                .deleteCookies("remember-me")
                 .permitAll()
             )
             .addFilterAfter(passwordChangeRequiredFilter, UsernamePasswordAuthenticationFilter.class);

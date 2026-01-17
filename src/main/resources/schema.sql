@@ -69,3 +69,14 @@ CREATE TABLE IF NOT EXISTS failed_authentications (
 );
 
 CREATE INDEX IF NOT EXISTS idx_failed_auth_lookup ON failed_authentications(username, authentication_timestamp DESC);
+
+-- Remember Me永続トークンテーブル（Spring Security標準）
+CREATE TABLE IF NOT EXISTS persistent_logins (
+    username VARCHAR(64) NOT NULL,
+    series VARCHAR(64) PRIMARY KEY,
+    token VARCHAR(64) NOT NULL,
+    last_used TIMESTAMP NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_persistent_logins_username ON persistent_logins(username);
+CREATE INDEX IF NOT EXISTS idx_persistent_logins_last_used ON persistent_logins(last_used);
