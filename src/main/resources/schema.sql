@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS user_logins (
     id              SERIAL PRIMARY KEY,
     username        VARCHAR(50) NOT NULL,
     logged_in_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    login_method    VARCHAR(20) NOT NULL,     -- 'FORM' or 'OIDC'
+    login_method    VARCHAR(20) NOT NULL,     -- 'FORM', 'OIDC', or 'PASSKEY'
     oidc_provider   VARCHAR(20),              -- 'google' (OIDCの場合のみ)
     ip_address      VARCHAR(45),              -- IPv4/IPv6対応
     user_agent      VARCHAR(500),
@@ -80,3 +80,61 @@ CREATE TABLE IF NOT EXISTS persistent_logins (
 
 CREATE INDEX IF NOT EXISTS idx_persistent_logins_username ON persistent_logins(username);
 CREATE INDEX IF NOT EXISTS idx_persistent_logins_last_used ON persistent_logins(last_used);
+
+-- WebAuthn/Passkey関連テーブル
+
+-- パスキーユーザーエンティティテーブル
+-- WebAuthnの公開鍵クレデンシャルユーザーエンティティ情報を格納
+CREATE TABLE IF NOT EXISTS passkey_user_entities (
+    id VARCHAR(255) PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    display_name VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- パスキークレデンシャルテーブル
+-- 各デバイスのパスキー（公開鍵）情報を格納
+CREATE TABLE IF NOT EXISTS passkey_credentials (
+    id VARCHAR(255) PRIMARY KEY,
+    user_entity_id VARCHAR(255) NOT NULL,
+    credential_public_key BYTEA NOT NULL,
+    signature_count BIGINT NOT NULL,
+    uv_initialized BOOLEAN NOT NULL,
+    transports VARCHAR(255),
+    backup_eligible BOOLEAN NOT NULL,
+    backup_state BOOLEAN NOT NULL,
+    attestation_object BYTEA,
+    attestation_client_data_json BYTEA,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    last_used_at TIMESTAMP,
+    label VARCHAR(255),  -- デバイス名（例：「iPhone 15 Pro」「MacBook Pro」）
+    CONSTRAINT fk_passkey_credentials_user_entity
+        FOREIGN KEY(user_entity_id)
+        REFERENCES passkey_user_entities(id)
+        ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_passkey_credentials_user_entity_id
+    ON passkey_credentials(user_entity_id);
+
+-- ユーザーとパスキーの紐付けテーブル
+-- 既存のusersテーブル（username）とpasskey_user_entities（id）を紐付け
+CREATE TABLE IF NOT EXISTS user_passkey_bindings (
+    username VARCHAR(50) NOT NULL,
+    user_entity_id VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (username, user_entity_id),
+    CONSTRAINT fk_passkey_bindings_users
+        FOREIGN KEY(username)
+        REFERENCES users(username)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_passkey_bindings_entity
+        FOREIGN KEY(user_entity_id)
+        REFERENCES passkey_user_entities(id)
+        ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_passkey_bindings_username
+    ON user_passkey_bindings(username);
+CREATE INDEX IF NOT EXISTS idx_user_passkey_bindings_user_entity_id
+    ON user_passkey_bindings(user_entity_id);

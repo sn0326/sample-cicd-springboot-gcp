@@ -75,6 +75,13 @@
             <artifactId>lombok</artifactId>
             <optional>true</optional>
         </dependency>
+
+        <!-- WebAuthn/Passkey Support -->
+        <dependency>
+            <groupId>com.webauthn4j</groupId>
+            <artifactId>webauthn4j-core</artifactId>
+            <version>0.29.7.RELEASE</version>
+        </dependency>
     </dependencies>
     
     <build>

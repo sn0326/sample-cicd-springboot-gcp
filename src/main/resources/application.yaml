@@ -71,6 +71,20 @@ security:
     token-validity-seconds: 1209600  # 14日間（2週間）
     cleanup-days: 30                  # 30日以上前のトークンを削除
 
+# WebAuthn/Passkey設定
+webauthn:
+  rp:
+    # アプリケーション識別子（ドメイン名）
+    # 本番環境ではHTTPSが必須（localhostのみHTTP可）
+    id: ${WEBAUTHN_RP_ID:localhost}
+    # アプリケーション表示名（ブラウザの認証ダイアログに表示）
+    name: ${WEBAUTHN_RP_NAME:CICD Demo Application}
+  # パスキー認証を許可するオリジン（完全なURL）
+  allowed-origins:
+    - ${WEBAUTHN_ALLOWED_ORIGIN:http://localhost:8080}
+    # 本番環境の例:
+    # - https://sample-cicd-springboot-gcp.sn0326.com
+
 # メール送信設定
 mail:
   # 送信プロバイダー（mock: モック実装、sendgrid: SendGrid実装）

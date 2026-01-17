@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>パスキー管理 - Spring Boot Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen flex items-center justify-center p-5 bg-gray-50">
+    <div class="w-full max-w-3xl bg-white rounded-lg shadow-2xl overflow-hidden">
+        <header class="bg-slate-800 text-white p-8 flex justify-between items-center flex-wrap">
+            <h1 class="text-2xl font-bold mb-2.5">🔐 パスキー管理</h1>
+            <div class="flex items-center gap-4">
+                <a th:href="@{/profile}" class="bg-white/20 text-white border border-white px-4 py-2 rounded-md cursor-pointer text-sm hover:bg-white/30 transition-colors no-underline">
+                    プロフィールへ戻る
+                </a>
+                <a th:href="@{/home}" class="bg-white/20 text-white border border-white px-4 py-2 rounded-md cursor-pointer text-sm hover:bg-white/30 transition-colors no-underline">
+                    ホームへ戻る
+                </a>
+            </div>
+        </header>
+
+        <main class="p-10">
+            <div id="successMessage" class="bg-green-50 text-green-700 border border-green-200 rounded-md p-3 mb-5 text-sm hidden">
+                <span id="successText"></span>
+            </div>
+
+            <div id="errorMessage" class="bg-red-50 text-red-700 border border-red-200 rounded-md p-3 mb-5 text-sm hidden">
+                <span id="errorText"></span>
+            </div>
+
+            <div class="mb-8">
+                <h2 class="text-gray-800 mb-4 text-2xl font-bold">パスキーとは？</h2>
+                <div class="bg-blue-50 p-5 rounded-lg mb-5">
+                    <p class="text-gray-700 mb-3">
+                        パスキーは、パスワードの代わりに生体認証（指紋、顔認証など）や画面ロックでログインできる、より安全で便利な認証方式です。
+                    </p>
+                    <ul class="list-disc list-inside text-gray-700 space-y-2">
+                        <li>パスワードを覚える必要がありません</li>
+                        <li>フィッシング攻撃に強い</li>
+                        <li>デバイスに安全に保存される</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="mb-8">
+                <h2 class="text-gray-800 mb-4 text-2xl font-bold">パスキーの状態</h2>
+                <div class="bg-gray-50 p-5 rounded-lg">
+                    <p class="py-2 text-gray-700">
+                        <strong>ユーザー名:</strong> <span th:text="${username}">user</span>
+                    </p>
+                    <p class="py-2 text-gray-700">
+                        <strong>パスキー登録状態:</strong>
+                        <span th:if="${hasPasskey}" class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                            ✓ 登録済み
+                        </span>
+                        <span th:unless="${hasPasskey}" class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
+                            未登録
+                        </span>
+                    </p>
+                </div>
+            </div>
+
+            <div class="mb-8" th:unless="${hasPasskey}">
+                <h2 class="text-gray-800 mb-4 text-2xl font-bold">パスキーを登録</h2>
+                <p class="text-gray-600 mb-5">
+                    このデバイスにパスキーを登録すると、次回からパスワードなしでログインできるようになります。
+                </p>
+                <button id="registerPasskeyBtn"
+                        class="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition-colors font-medium">
+                    パスキーを登録する
+                </button>
+            </div>
+
+            <div class="mb-8" th:if="${hasPasskey}">
+                <h2 class="text-gray-800 mb-4 text-2xl font-bold">パスキーを削除</h2>
+                <p class="text-gray-600 mb-5">
+                    パスキーを削除すると、生体認証でのログインができなくなります。パスワードでのログインは引き続き利用できます。
+                </p>
+                <button id="deletePasskeyBtn"
+                        class="bg-red-600 text-white px-6 py-3 rounded-md hover:bg-red-700 transition-colors font-medium">
+                    パスキーを削除する
+                </button>
+            </div>
+
+            <div id="loadingIndicator" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div class="bg-white p-6 rounded-lg shadow-xl">
+                    <div class="flex items-center space-x-3">
+                        <svg class="animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span class="text-gray-700">処理中...</span>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        const hasPasskey = /*[[${hasPasskey}]]*/ false;
+        const csrfToken = /*[[${_csrf.token}]]*/ '';
+        const csrfHeaderName = /*[[${_csrf.headerName}]]*/ 'X-CSRF-TOKEN';
+
+        // メッセージ表示関数
+        function showSuccess(message) {
+            document.getElementById('successText').textContent = message;
+            document.getElementById('successMessage').classList.remove('hidden');
+            document.getElementById('errorMessage').classList.add('hidden');
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        }
+
+        function showError(message) {
+            document.getElementById('errorText').textContent = message;
+            document.getElementById('errorMessage').classList.remove('hidden');
+            document.getElementById('successMessage').classList.add('hidden');
+        }
+
+        function showLoading(show) {
+            if (show) {
+                document.getElementById('loadingIndicator').classList.remove('hidden');
+            } else {
+                document.getElementById('loadingIndicator').classList.add('hidden');
+            }
+        }
+
+        // パスキー登録処理
+        async function registerPasskey() {
+            try {
+                showLoading(true);
+
+                // Step 1: サーバーから登録オプションを取得
+                const initResponse = await fetch('/passkey/register/initiate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        [csrfHeaderName]: csrfToken
+                    }
+                });
+
+                if (!initResponse.ok) {
+                    throw new Error('パスキー登録の開始に失敗しました');
+                }
+
+                const initData = await initResponse.json();
+
+                // Step 2: WebAuthn APIで登録オプションを取得
+                const optionsResponse = await fetch('/webauthn/register/options', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        [csrfHeaderName]: csrfToken
+                    },
+                    body: JSON.stringify({
+                        username: initData.username,
+                        displayName: initData.displayName
+                    })
+                });
+
+                if (!optionsResponse.ok) {
+                    throw new Error('登録オプションの取得に失敗しました');
+                }
+
+                const options = await optionsResponse.json();
+
+                // Step 3: ブラウザの生体認証を実行
+                const credential = await navigator.credentials.create({ publicKey: options });
+
+                // Step 4: クレデンシャルをサーバーに送信
+                const registerResponse = await fetch('/webauthn/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        [csrfHeaderName]: csrfToken
+                    },
+                    body: JSON.stringify(credential)
+                });
+
+                if (!registerResponse.ok) {
+                    throw new Error('パスキーの登録に失敗しました');
+                }
+
+                showLoading(false);
+                showSuccess('パスキーの登録が完了しました！');
+
+            } catch (error) {
+                console.error('パスキー登録エラー:', error);
+                showLoading(false);
+                showError(error.message || 'パスキーの登録に失敗しました。ブラウザがWebAuthnをサポートしているか確認してください。');
+            }
+        }
+
+        // パスキー削除処理
+        async function deletePasskey() {
+            if (!confirm('パスキーを削除してもよろしいですか？')) {
+                return;
+            }
+
+            try {
+                showLoading(true);
+
+                const response = await fetch('/passkey/delete', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        [csrfHeaderName]: csrfToken
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('パスキーの削除に失敗しました');
+                }
+
+                showLoading(false);
+                showSuccess('パスキーを削除しました');
+
+            } catch (error) {
+                console.error('パスキー削除エラー:', error);
+                showLoading(false);
+                showError('パスキーの削除に失敗しました');
+            }
+        }
+
+        // イベントリスナー設定
+        document.addEventListener('DOMContentLoaded', () => {
+            const registerBtn = document.getElementById('registerPasskeyBtn');
+            const deleteBtn = document.getElementById('deletePasskeyBtn');
+
+            if (registerBtn) {
+                registerBtn.addEventListener('click', registerPasskey);
+            }
+
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', deletePasskey);
+            }
+
+            // WebAuthnサポートチェック
+            if (!window.PublicKeyCredential) {
+                showError('このブラウザはパスキーをサポートしていません。Chrome、Safari、Edgeなどの最新ブラウザをご利用ください。');
+                if (registerBtn) {
+                    registerBtn.disabled = true;
+                    registerBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                }
+            }
+        });
+        /*]]>*/
+    </script>
+</body>
+</html>

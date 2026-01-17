@@ -17,6 +17,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
+import org.springframework.security.web.webauthn.registration.PublicKeyCredentialUserEntityRepository;
+import org.springframework.security.web.webauthn.management.UserCredentialRepository;
 
 import javax.sql.DataSource;
 
@@ -32,6 +34,7 @@ public class SecurityConfig {
     private final AccountLockoutUserDetailsChecker accountLockoutChecker;
     private final DataSource dataSource;
     private final RememberMeProperties rememberMeProperties;
+    private final WebAuthnProperties webAuthnProperties;
 
     public SecurityConfig(
             CustomOidcUserService customOidcUserService,
@@ -42,7 +45,8 @@ public class SecurityConfig {
             PasswordChangeRequiredFilter passwordChangeRequiredFilter,
             AccountLockoutUserDetailsChecker accountLockoutChecker,
             DataSource dataSource,
-            RememberMeProperties rememberMeProperties) {
+            RememberMeProperties rememberMeProperties,
+            WebAuthnProperties webAuthnProperties) {
         this.customOidcUserService = customOidcUserService;
         this.formAuthenticationSuccessHandler = formAuthenticationSuccessHandler;
         this.formAuthenticationFailureHandler = formAuthenticationFailureHandler;
@@ -52,6 +56,7 @@ public class SecurityConfig {
         this.accountLockoutChecker = accountLockoutChecker;
         this.dataSource = dataSource;
         this.rememberMeProperties = rememberMeProperties;
+        this.webAuthnProperties = webAuthnProperties;
     }
 
     @Bean
@@ -81,12 +86,19 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, DaoAuthenticationProvider daoAuthenticationProvider, PersistentTokenRepository persistentTokenRepository) throws Exception {
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http,
+            DaoAuthenticationProvider daoAuthenticationProvider,
+            PersistentTokenRepository persistentTokenRepository,
+            PublicKeyCredentialUserEntityRepository userEntityRepository,
+            UserCredentialRepository userCredentialRepository) throws Exception {
         http
             .authorizeHttpRequests(authorize -> authorize
                 .requestMatchers("/login", "/css/**", "/js/**").permitAll()
+                .requestMatchers("/webauthn/**").permitAll()  // WebAuthn/Passkeyエンドポイント
                 .requestMatchers("/health").permitAll()
                 .requestMatchers("/force-change-password").authenticated()
+                .requestMatchers("/passkey/**").authenticated()  // パスキー管理画面
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )
@@ -104,6 +116,13 @@ public class SecurityConfig {
                 )
                 .successHandler(oidcAuthenticationSuccessHandler)
                 .failureHandler(oidcAuthenticationFailureHandler)
+            )
+            .webauthn(webauthn -> webauthn
+                .rpName(webAuthnProperties.getRpName())
+                .rpId(webAuthnProperties.getRpId())
+                .allowedOrigins(webAuthnProperties.getAllowedOrigins().toArray(new String[0]))
+                .userEntityRepository(userEntityRepository)
+                .userCredentialRepository(userCredentialRepository)
             )
             .rememberMe(rememberMe -> rememberMe
                 .key("cicddemo-remember-me-key")
