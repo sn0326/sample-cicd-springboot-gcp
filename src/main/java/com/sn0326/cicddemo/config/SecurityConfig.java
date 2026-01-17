@@ -8,7 +8,6 @@ import com.sn0326.cicddemo.security.FormAuthenticationSuccessHandler;
 import com.sn0326.cicddemo.security.OidcAuthenticationFailureHandler;
 import com.sn0326.cicddemo.security.OidcAuthenticationSuccessHandler;
 import com.sn0326.cicddemo.security.PasswordChangeRequiredFilter;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -32,12 +31,7 @@ public class SecurityConfig {
     private final PasswordChangeRequiredFilter passwordChangeRequiredFilter;
     private final AccountLockoutUserDetailsChecker accountLockoutChecker;
     private final DataSource dataSource;
-
-    @Value("${security.remember-me.token-validity-seconds}")
-    private int rememberMeTokenValiditySeconds;
-
-    @Value("${security.remember-me.cleanup-days}")
-    private int rememberMeCleanupDays;
+    private final RememberMeProperties rememberMeProperties;
 
     public SecurityConfig(
             CustomOidcUserService customOidcUserService,
@@ -47,7 +41,8 @@ public class SecurityConfig {
             OidcAuthenticationFailureHandler oidcAuthenticationFailureHandler,
             PasswordChangeRequiredFilter passwordChangeRequiredFilter,
             AccountLockoutUserDetailsChecker accountLockoutChecker,
-            DataSource dataSource) {
+            DataSource dataSource,
+            RememberMeProperties rememberMeProperties) {
         this.customOidcUserService = customOidcUserService;
         this.formAuthenticationSuccessHandler = formAuthenticationSuccessHandler;
         this.formAuthenticationFailureHandler = formAuthenticationFailureHandler;
@@ -56,6 +51,7 @@ public class SecurityConfig {
         this.passwordChangeRequiredFilter = passwordChangeRequiredFilter;
         this.accountLockoutChecker = accountLockoutChecker;
         this.dataSource = dataSource;
+        this.rememberMeProperties = rememberMeProperties;
     }
 
     @Bean
@@ -78,7 +74,8 @@ public class SecurityConfig {
 
     @Bean
     public PersistentTokenRepository persistentTokenRepository() {
-        CleanupJdbcTokenRepository tokenRepository = new CleanupJdbcTokenRepository(rememberMeCleanupDays);
+        CleanupJdbcTokenRepository tokenRepository = new CleanupJdbcTokenRepository(
+                rememberMeProperties.getCleanupDays());
         tokenRepository.setDataSource(dataSource);
         return tokenRepository;
     }
@@ -111,7 +108,7 @@ public class SecurityConfig {
             .rememberMe(rememberMe -> rememberMe
                 .key("cicddemo-remember-me-key")
                 .tokenRepository(persistentTokenRepository)
-                .tokenValiditySeconds(rememberMeTokenValiditySeconds)
+                .tokenValiditySeconds(rememberMeProperties.getTokenValiditySeconds())
                 .rememberMeParameter("remember-me")
                 .rememberMeCookieName("remember-me")
                 .useSecureCookie(false)  // 開発環境用（本番環境ではtrueに設定）
