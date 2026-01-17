@@ -3,6 +3,7 @@ package com.sn0326.cicddemo.security;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.security.authentication.AccountExpiredException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
@@ -12,8 +13,6 @@ import org.springframework.security.web.authentication.SimpleUrlAuthenticationFa
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 
 @Component
 public class FormAuthenticationFailureHandler extends SimpleUrlAuthenticationFailureHandler {
@@ -28,16 +27,16 @@ public class FormAuthenticationFailureHandler extends SimpleUrlAuthenticationFai
         // エラーメッセージの決定
         String errorMessage = getErrorMessage(exception);
 
-        // ユーザー名をURLエンコードしてリダイレクト
-        String redirectUrl = "/login?error";
+        // セッションにユーザー名とエラーメッセージを保存（フラッシュアトリビュートとして）
+        HttpSession session = request.getSession();
         if (username != null && !username.isEmpty()) {
-            redirectUrl += "&username=" + URLEncoder.encode(username, StandardCharsets.UTF_8);
+            session.setAttribute("SPRING_SECURITY_LAST_USERNAME", username);
         }
         if (errorMessage != null) {
-            redirectUrl += "&message=" + URLEncoder.encode(errorMessage, StandardCharsets.UTF_8);
+            session.setAttribute("SPRING_SECURITY_LAST_ERROR_MESSAGE", errorMessage);
         }
 
-        setDefaultFailureUrl(redirectUrl);
+        setDefaultFailureUrl("/login?error");
         super.onAuthenticationFailure(request, response, exception);
     }
 
