@@ -67,7 +67,137 @@
                 Googleでログイン
             </a>
 
+            <button id="passkeyLoginBtn"
+                    class="w-full flex items-center justify-center gap-3 py-3 px-4 border-2 border-blue-500 rounded-md text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors mt-3">
+                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4"/>
+                </svg>
+                パスキーでログイン
+            </button>
+
+            <div id="passkeyError" class="bg-red-50 text-red-700 border border-red-200 rounded-md p-3 mt-3 text-sm hidden">
+                <span id="passkeyErrorText"></span>
+            </div>
+
+            <div id="loadingIndicator" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div class="bg-white p-6 rounded-lg shadow-xl">
+                    <div class="flex items-center space-x-3">
+                        <svg class="animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span class="text-gray-700">認証中...</span>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        const csrfToken = /*[[${_csrf.token}]]*/ '';
+        const csrfHeaderName = /*[[${_csrf.headerName}]]*/ 'X-CSRF-TOKEN';
+
+        function showLoading(show) {
+            const indicator = document.getElementById('loadingIndicator');
+            if (indicator) {
+                if (show) {
+                    indicator.classList.remove('hidden');
+                } else {
+                    indicator.classList.add('hidden');
+                }
+            }
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('passkeyError');
+            const errorText = document.getElementById('passkeyErrorText');
+            if (errorDiv && errorText) {
+                errorText.textContent = message;
+                errorDiv.classList.remove('hidden');
+                setTimeout(() => {
+                    errorDiv.classList.add('hidden');
+                }, 5000);
+            }
+        }
+
+        async function loginWithPasskey() {
+            try {
+                showLoading(true);
+
+                // Step 1: サーバーから認証オプションを取得
+                const optionsResponse = await fetch('/webauthn/authenticate/options', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        [csrfHeaderName]: csrfToken
+                    }
+                });
+
+                if (!optionsResponse.ok) {
+                    throw new Error('認証オプションの取得に失敗しました');
+                }
+
+                const options = await optionsResponse.json();
+
+                // Step 2: ブラウザの生体認証を実行
+                const credential = await navigator.credentials.get({ publicKey: options });
+
+                if (!credential) {
+                    throw new Error('認証がキャンセルされました');
+                }
+
+                // Step 3: クレデンシャルをサーバーに送信
+                const authenticateResponse = await fetch('/webauthn/authenticate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        [csrfHeaderName]: csrfToken
+                    },
+                    body: JSON.stringify(credential)
+                });
+
+                if (!authenticateResponse.ok) {
+                    throw new Error('パスキー認証に失敗しました');
+                }
+
+                // 認証成功 - ホーム画面にリダイレクト
+                window.location.href = '/home';
+
+            } catch (error) {
+                console.error('パスキーログインエラー:', error);
+                showLoading(false);
+
+                let errorMessage = 'パスキーでのログインに失敗しました。';
+
+                if (error.name === 'NotAllowedError') {
+                    errorMessage = '認証がキャンセルされました。';
+                } else if (error.name === 'NotSupportedError') {
+                    errorMessage = 'このブラウザはパスキーをサポートしていません。';
+                } else if (error.message) {
+                    errorMessage = error.message;
+                }
+
+                showError(errorMessage);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const passkeyBtn = document.getElementById('passkeyLoginBtn');
+
+            if (passkeyBtn) {
+                // WebAuthnサポートチェック
+                if (!window.PublicKeyCredential) {
+                    passkeyBtn.disabled = true;
+                    passkeyBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                    passkeyBtn.title = 'このブラウザはパスキーをサポートしていません';
+                } else {
+                    passkeyBtn.addEventListener('click', loginWithPasskey);
+                }
+            }
+        });
+        /*]]>*/
+    </script>
 </body>
 </html>
