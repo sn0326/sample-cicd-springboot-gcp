@@ -4,7 +4,8 @@ import com.sn0326.cicddemo.model.UserPasskeyBinding;
 import com.sn0326.cicddemo.repository.UserPasskeyBindingRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.web.webauthn.api.PublicKeyCredentialUserEntity;
+import org.springframework.security.web.webauthn.api.Bytes;
+import org.springframework.security.web.webauthn.api.ImmutablePublicKeyCredentialUserEntity;
 import org.springframework.security.web.webauthn.management.PublicKeyCredentialUserEntityRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,8 +46,8 @@ public class PasskeyService {
 
         // 新規パスキーエンティティを作成
         String userEntityId = generateUserEntityId();
-        PublicKeyCredentialUserEntity userEntity = PublicKeyCredentialUserEntity.builder()
-                .id(userEntityId)
+        ImmutablePublicKeyCredentialUserEntity userEntity = ImmutablePublicKeyCredentialUserEntity.builder()
+                .id(Bytes.fromBase64(userEntityId))
                 .name(username)
                 .displayName(displayName)
                 .build();
@@ -113,7 +114,7 @@ public class PasskeyService {
         var bindings = userPasskeyBindingRepository.findByUsername(username);
         for (UserPasskeyBinding binding : bindings) {
             // パスキーエンティティを削除（CASCADE削除でクレデンシャルも削除される）
-            userEntityRepository.delete(binding.getUserEntityId());
+            userEntityRepository.delete(Bytes.fromBase64(binding.getUserEntityId()));
             // 紐付け情報を削除
             userPasskeyBindingRepository.delete(binding);
         }

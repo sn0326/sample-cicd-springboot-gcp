@@ -17,8 +17,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
-import org.springframework.security.web.webauthn.management.PublicKeyCredentialUserEntityRepository;
-import org.springframework.security.web.webauthn.management.UserCredentialRepository;
 
 import javax.sql.DataSource;
 
@@ -89,9 +87,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http,
             DaoAuthenticationProvider daoAuthenticationProvider,
-            PersistentTokenRepository persistentTokenRepository,
-            PublicKeyCredentialUserEntityRepository userEntityRepository,
-            UserCredentialRepository userCredentialRepository) throws Exception {
+            PersistentTokenRepository persistentTokenRepository) throws Exception {
         http
             .authorizeHttpRequests(authorize -> authorize
                 .requestMatchers("/login", "/css/**", "/js/**").permitAll()
@@ -117,12 +113,10 @@ public class SecurityConfig {
                 .successHandler(oidcAuthenticationSuccessHandler)
                 .failureHandler(oidcAuthenticationFailureHandler)
             )
-            .webauthn(webauthn -> webauthn
+            .webAuthn(webAuthn -> webAuthn
                 .rpName(webAuthnProperties.getRpName())
                 .rpId(webAuthnProperties.getRpId())
                 .allowedOrigins(webAuthnProperties.getAllowedOrigins().toArray(new String[0]))
-                .userEntityRepository(userEntityRepository)
-                .userCredentialRepository(userCredentialRepository)
             )
             .rememberMe(rememberMe -> rememberMe
                 .key("cicddemo-remember-me-key")
