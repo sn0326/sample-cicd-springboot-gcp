@@ -1,6 +1,7 @@
 package com.sn0326.cicddemo.config;
 
 import com.sn0326.cicddemo.security.AccountLockoutUserDetailsChecker;
+import com.sn0326.cicddemo.security.CleanupJdbcTokenRepository;
 import com.sn0326.cicddemo.security.CustomOidcUserService;
 import com.sn0326.cicddemo.security.FormAuthenticationFailureHandler;
 import com.sn0326.cicddemo.security.FormAuthenticationSuccessHandler;
@@ -15,7 +16,6 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.authentication.rememberme.JdbcTokenRepositoryImpl;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
 
 import javax.sql.DataSource;
@@ -71,7 +71,7 @@ public class SecurityConfig {
 
     @Bean
     public PersistentTokenRepository persistentTokenRepository() {
-        JdbcTokenRepositoryImpl tokenRepository = new JdbcTokenRepositoryImpl();
+        CleanupJdbcTokenRepository tokenRepository = new CleanupJdbcTokenRepository();
         tokenRepository.setDataSource(dataSource);
         return tokenRepository;
     }
