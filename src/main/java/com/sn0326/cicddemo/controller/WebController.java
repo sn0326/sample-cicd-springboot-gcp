@@ -3,6 +3,7 @@ package com.sn0326.cicddemo.controller;
 import com.sn0326.cicddemo.dto.ChangePasswordRequest;
 import com.sn0326.cicddemo.service.LastLoginService;
 import com.sn0326.cicddemo.service.PasswordChangeService;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -28,7 +29,21 @@ public class WebController {
     }
 
     @GetMapping("/login")
-    public String login() {
+    public String login(Model model, HttpSession session) {
+        // セッションからユーザー名とエラーメッセージを取得（フラッシュアトリビュートとして）
+        String username = (String) session.getAttribute("SPRING_SECURITY_LAST_USERNAME");
+        String errorMessage = (String) session.getAttribute("SPRING_SECURITY_LAST_ERROR_MESSAGE");
+
+        if (username != null) {
+            model.addAttribute("username", username);
+            session.removeAttribute("SPRING_SECURITY_LAST_USERNAME");
+        }
+
+        if (errorMessage != null) {
+            model.addAttribute("errorMessage", errorMessage);
+            session.removeAttribute("SPRING_SECURITY_LAST_ERROR_MESSAGE");
+        }
+
         return "login";
     }
 

@@ -2,6 +2,7 @@ package com.sn0326.cicddemo.config;
 
 import com.sn0326.cicddemo.security.AccountLockoutUserDetailsChecker;
 import com.sn0326.cicddemo.security.CustomOidcUserService;
+import com.sn0326.cicddemo.security.FormAuthenticationFailureHandler;
 import com.sn0326.cicddemo.security.FormAuthenticationSuccessHandler;
 import com.sn0326.cicddemo.security.OidcAuthenticationFailureHandler;
 import com.sn0326.cicddemo.security.OidcAuthenticationSuccessHandler;
@@ -20,6 +21,7 @@ public class SecurityConfig {
 
     private final CustomOidcUserService customOidcUserService;
     private final FormAuthenticationSuccessHandler formAuthenticationSuccessHandler;
+    private final FormAuthenticationFailureHandler formAuthenticationFailureHandler;
     private final OidcAuthenticationSuccessHandler oidcAuthenticationSuccessHandler;
     private final OidcAuthenticationFailureHandler oidcAuthenticationFailureHandler;
     private final PasswordChangeRequiredFilter passwordChangeRequiredFilter;
@@ -28,12 +30,14 @@ public class SecurityConfig {
     public SecurityConfig(
             CustomOidcUserService customOidcUserService,
             FormAuthenticationSuccessHandler formAuthenticationSuccessHandler,
+            FormAuthenticationFailureHandler formAuthenticationFailureHandler,
             OidcAuthenticationSuccessHandler oidcAuthenticationSuccessHandler,
             OidcAuthenticationFailureHandler oidcAuthenticationFailureHandler,
             PasswordChangeRequiredFilter passwordChangeRequiredFilter,
             AccountLockoutUserDetailsChecker accountLockoutChecker) {
         this.customOidcUserService = customOidcUserService;
         this.formAuthenticationSuccessHandler = formAuthenticationSuccessHandler;
+        this.formAuthenticationFailureHandler = formAuthenticationFailureHandler;
         this.oidcAuthenticationSuccessHandler = oidcAuthenticationSuccessHandler;
         this.oidcAuthenticationFailureHandler = oidcAuthenticationFailureHandler;
         this.passwordChangeRequiredFilter = passwordChangeRequiredFilter;
@@ -72,6 +76,7 @@ public class SecurityConfig {
             .formLogin(form -> form
                 .loginPage("/login")
                 .successHandler(formAuthenticationSuccessHandler)
+                .failureHandler(formAuthenticationFailureHandler)
                 .permitAll()
             )
             .oauth2Login(oauth2 -> oauth2
