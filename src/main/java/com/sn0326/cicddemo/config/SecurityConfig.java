@@ -15,6 +15,10 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.rememberme.JdbcTokenRepositoryImpl;
+import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
+
+import javax.sql.DataSource;
 
 @Configuration
 public class SecurityConfig {
@@ -26,6 +30,7 @@ public class SecurityConfig {
     private final OidcAuthenticationFailureHandler oidcAuthenticationFailureHandler;
     private final PasswordChangeRequiredFilter passwordChangeRequiredFilter;
     private final AccountLockoutUserDetailsChecker accountLockoutChecker;
+    private final DataSource dataSource;
 
     public SecurityConfig(
             CustomOidcUserService customOidcUserService,
@@ -34,7 +39,8 @@ public class SecurityConfig {
             OidcAuthenticationSuccessHandler oidcAuthenticationSuccessHandler,
             OidcAuthenticationFailureHandler oidcAuthenticationFailureHandler,
             PasswordChangeRequiredFilter passwordChangeRequiredFilter,
-            AccountLockoutUserDetailsChecker accountLockoutChecker) {
+            AccountLockoutUserDetailsChecker accountLockoutChecker,
+            DataSource dataSource) {
         this.customOidcUserService = customOidcUserService;
         this.formAuthenticationSuccessHandler = formAuthenticationSuccessHandler;
         this.formAuthenticationFailureHandler = formAuthenticationFailureHandler;
@@ -42,6 +48,7 @@ public class SecurityConfig {
         this.oidcAuthenticationFailureHandler = oidcAuthenticationFailureHandler;
         this.passwordChangeRequiredFilter = passwordChangeRequiredFilter;
         this.accountLockoutChecker = accountLockoutChecker;
+        this.dataSource = dataSource;
     }
 
     @Bean
@@ -63,7 +70,14 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, DaoAuthenticationProvider daoAuthenticationProvider) throws Exception {
+    public PersistentTokenRepository persistentTokenRepository() {
+        JdbcTokenRepositoryImpl tokenRepository = new JdbcTokenRepositoryImpl();
+        tokenRepository.setDataSource(dataSource);
+        return tokenRepository;
+    }
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, DaoAuthenticationProvider daoAuthenticationProvider, PersistentTokenRepository persistentTokenRepository) throws Exception {
         http
             .authorizeHttpRequests(authorize -> authorize
                 .requestMatchers("/login", "/css/**", "/js/**").permitAll()
@@ -87,8 +101,17 @@ public class SecurityConfig {
                 .successHandler(oidcAuthenticationSuccessHandler)
                 .failureHandler(oidcAuthenticationFailureHandler)
             )
+            .rememberMe(rememberMe -> rememberMe
+                .key("cicddemo-remember-me-key")
+                .tokenRepository(persistentTokenRepository)
+                .tokenValiditySeconds(1209600)  // 14日間（2週間）
+                .rememberMeParameter("remember-me")
+                .rememberMeCookieName("remember-me")
+                .useSecureCookie(false)  // 開発環境用（本番環境ではtrueに設定）
+            )
             .logout(logout -> logout
                 .logoutSuccessUrl("/login?logout")
+                .deleteCookies("remember-me")
                 .permitAll()
             )
             .addFilterAfter(passwordChangeRequiredFilter, UsernamePasswordAuthenticationFilter.class);
