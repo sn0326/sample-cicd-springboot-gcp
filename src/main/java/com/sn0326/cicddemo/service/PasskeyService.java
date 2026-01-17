@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.web.webauthn.api.Bytes;
 import org.springframework.security.web.webauthn.api.ImmutablePublicKeyCredentialUserEntity;
+import org.springframework.security.web.webauthn.api.PublicKeyCredentialUserEntity;
 import org.springframework.security.web.webauthn.management.PublicKeyCredentialUserEntityRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,7 +47,7 @@ public class PasskeyService {
 
         // 新規パスキーエンティティを作成
         String userEntityId = generateUserEntityId();
-        ImmutablePublicKeyCredentialUserEntity userEntity = ImmutablePublicKeyCredentialUserEntity.builder()
+        PublicKeyCredentialUserEntity userEntity = ImmutablePublicKeyCredentialUserEntity.builder()
                 .id(Bytes.fromBase64(userEntityId))
                 .name(username)
                 .displayName(displayName)
