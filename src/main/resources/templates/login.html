@@ -170,6 +170,7 @@
                         userHandle: credential.response.userHandle ? bufferToBase64url(credential.response.userHandle) : null
                     },
                     type: credential.type,
+                    clientExtensionResults: credential.getClientExtensionResults ? credential.getClientExtensionResults() : {},
                     authenticatorAttachment: credential.authenticatorAttachment
                 };
 
