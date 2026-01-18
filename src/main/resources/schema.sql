@@ -81,47 +81,44 @@ CREATE TABLE IF NOT EXISTS persistent_logins (
 CREATE INDEX IF NOT EXISTS idx_persistent_logins_username ON persistent_logins(username);
 CREATE INDEX IF NOT EXISTS idx_persistent_logins_last_used ON persistent_logins(last_used);
 
--- WebAuthn/Passkey関連テーブル
+-- WebAuthn/Passkey関連テーブル (Spring Security 7.0 標準スキーマ)
 
 -- パスキーユーザーエンティティテーブル
--- WebAuthnの公開鍵クレデンシャルユーザーエンティティ情報を格納
-CREATE TABLE IF NOT EXISTS passkey_user_entities (
-    id VARCHAR(255) PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    display_name VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+-- Spring Security標準のuser_entitiesテーブル
+CREATE TABLE IF NOT EXISTS user_entities (
+    id VARCHAR(1000) NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    display_name VARCHAR(200),
+    PRIMARY KEY (id)
 );
 
 -- パスキークレデンシャルテーブル
--- 各デバイスのパスキー（公開鍵）情報を格納
-CREATE TABLE IF NOT EXISTS passkey_credentials (
-    id VARCHAR(255) PRIMARY KEY,
-    user_entity_id VARCHAR(255) NOT NULL,
-    credential_public_key BYTEA NOT NULL,
-    signature_count BIGINT NOT NULL,
-    uv_initialized BOOLEAN NOT NULL,
-    transports VARCHAR(255),
+-- Spring Security標準のuser_credentialsテーブル（PostgreSQL用にblobをbyteaに変換）
+CREATE TABLE IF NOT EXISTS user_credentials (
+    credential_id VARCHAR(1000) NOT NULL,
+    user_entity_user_id VARCHAR(1000) NOT NULL,
+    public_key BYTEA NOT NULL,
+    signature_count BIGINT,
+    uv_initialized BOOLEAN,
     backup_eligible BOOLEAN NOT NULL,
+    authenticator_transports VARCHAR(1000),
+    public_key_credential_type VARCHAR(100),
     backup_state BOOLEAN NOT NULL,
     attestation_object BYTEA,
     attestation_client_data_json BYTEA,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    last_used_at TIMESTAMP,
-    label VARCHAR(255),  -- デバイス名（例：「iPhone 15 Pro」「MacBook Pro」）
-    CONSTRAINT fk_passkey_credentials_user_entity
-        FOREIGN KEY(user_entity_id)
-        REFERENCES passkey_user_entities(id)
-        ON DELETE CASCADE
+    created TIMESTAMP,
+    last_used TIMESTAMP,
+    label VARCHAR(1000) NOT NULL,
+    PRIMARY KEY (credential_id)
 );
 
-CREATE INDEX IF NOT EXISTS idx_passkey_credentials_user_entity_id
-    ON passkey_credentials(user_entity_id);
-
 -- ユーザーとパスキーの紐付けテーブル
--- 既存のusersテーブル（username）とpasskey_user_entities（id）を紐付け
+-- 既存のusersテーブル（username）とuser_entities（id）を紐付け
+-- Spring SecurityのWebAuthn実装では直接の紐付けは不要だが、
+-- 既存のユーザー管理システムとの統合のために保持
 CREATE TABLE IF NOT EXISTS user_passkey_bindings (
     username VARCHAR(50) NOT NULL,
-    user_entity_id VARCHAR(255) NOT NULL,
+    user_entity_id VARCHAR(1000) NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (username, user_entity_id),
     CONSTRAINT fk_passkey_bindings_users
@@ -130,7 +127,7 @@ CREATE TABLE IF NOT EXISTS user_passkey_bindings (
         ON DELETE CASCADE,
     CONSTRAINT fk_passkey_bindings_entity
         FOREIGN KEY(user_entity_id)
-        REFERENCES passkey_user_entities(id)
+        REFERENCES user_entities(id)
         ON DELETE CASCADE
 );
 
