@@ -122,6 +122,17 @@
             }
         }
 
+        // Base64url エンコード関数
+        function bufferToBase64url(buffer) {
+            const bytes = new Uint8Array(buffer);
+            let binary = '';
+            for (let i = 0; i < bytes.length; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            const base64 = btoa(binary);
+            return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+        }
+
         async function loginWithPasskey() {
             try {
                 showLoading(true);
@@ -148,14 +159,28 @@
                     throw new Error('認証がキャンセルされました');
                 }
 
-                // Step 3: クレデンシャルをサーバーに送信
+                // Step 3: クレデンシャルをSpring Securityが期待する形式に変換
+                const credentialForServer = {
+                    id: credential.id,
+                    rawId: bufferToBase64url(credential.rawId),
+                    response: {
+                        authenticatorData: bufferToBase64url(credential.response.authenticatorData),
+                        clientDataJSON: bufferToBase64url(credential.response.clientDataJSON),
+                        signature: bufferToBase64url(credential.response.signature),
+                        userHandle: credential.response.userHandle ? bufferToBase64url(credential.response.userHandle) : null
+                    },
+                    type: credential.type,
+                    authenticatorAttachment: credential.authenticatorAttachment
+                };
+
+                // Step 4: クレデンシャルをサーバーに送信
                 const authenticateResponse = await fetch('/webauthn/authenticate', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         [csrfHeaderName]: csrfToken
                     },
-                    body: JSON.stringify(credential)
+                    body: JSON.stringify(credentialForServer)
                 });
 
                 if (!authenticateResponse.ok) {
