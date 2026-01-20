@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
+import org.springframework.security.web.webauthn.api.PublicKeyCredentialUserEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -129,6 +130,8 @@ public class PasskeyController {
             return userDetails.getUsername();
         } else if (principal instanceof OidcUser oidcUser) {
             return oidcUser.getEmail();
+        } else if (principal instanceof PublicKeyCredentialUserEntity userEntity) {
+            return userEntity.getName();
         }
 
         return principal.toString();
@@ -143,7 +146,12 @@ public class PasskeyController {
     private String getDisplayName(Authentication authentication) {
         Object principal = authentication.getPrincipal();
 
-        if (principal instanceof OidcUser oidcUser) {
+        if (principal instanceof PublicKeyCredentialUserEntity userEntity) {
+            String displayName = userEntity.getDisplayName();
+            if (displayName != null && !displayName.isEmpty()) {
+                return displayName;
+            }
+        } else if (principal instanceof OidcUser oidcUser) {
             String name = oidcUser.getFullName();
             if (name != null && !name.isEmpty()) {
                 return name;
