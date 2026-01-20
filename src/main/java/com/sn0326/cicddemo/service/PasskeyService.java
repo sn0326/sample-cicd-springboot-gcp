@@ -114,10 +114,10 @@ public class PasskeyService {
 
         var bindings = userPasskeyBindingRepository.findByUsername(username);
         for (UserPasskeyBinding binding : bindings) {
-            // パスキーエンティティを削除（CASCADE削除でクレデンシャルも削除される）
-            userEntityRepository.delete(Bytes.fromBase64(binding.getUserEntityId()));
-            // 紐付け情報を削除
+            // 先に紐付け情報を削除
             userPasskeyBindingRepository.delete(binding);
+            // その後、パスキーエンティティを削除（CASCADE削除でクレデンシャルも削除される）
+            userEntityRepository.delete(Bytes.fromBase64(binding.getUserEntityId()));
         }
 
         log.info("パスキー削除完了: username={}", username);
