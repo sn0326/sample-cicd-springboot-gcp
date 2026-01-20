@@ -196,7 +196,7 @@
                 };
 
                 // Step 4: クレデンシャルをサーバーに送信
-                const authenticateResponse = await fetch('/webauthn/authenticate', {
+                const authenticateResponse = await fetch('/login/webauthn', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -209,8 +209,13 @@
                     throw new Error('パスキー認証に失敗しました');
                 }
 
-                // 認証成功 - ホーム画面にリダイレクト
-                window.location.href = '/home';
+                // 認証成功 - レスポンスからリダイレクトURLを取得
+                const result = await authenticateResponse.json();
+                if (result.authenticated && result.redirectUrl) {
+                    window.location.href = result.redirectUrl;
+                } else {
+                    window.location.href = '/home';
+                }
 
             } catch (error) {
                 console.error('パスキーログインエラー:', error);
