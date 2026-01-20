@@ -4,7 +4,6 @@ import com.sn0326.cicddemo.service.PasskeyService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.web.webauthn.api.PublicKeyCredentialUserEntity;
 import org.springframework.stereotype.Controller;
@@ -119,26 +118,22 @@ public class PasskeyController {
 
     /**
      * 認証情報からユーザー名を取得
+     * すべての認証方式（フォーム、OIDC、パスキー）で統一されたローカルusernameを返す
      *
      * @param authentication 認証情報
      * @return ユーザー名
      */
     private String getUsername(Authentication authentication) {
-        Object principal = authentication.getPrincipal();
-
-        if (principal instanceof UserDetails userDetails) {
-            return userDetails.getUsername();
-        } else if (principal instanceof OidcUser oidcUser) {
-            return oidcUser.getEmail();
-        } else if (principal instanceof PublicKeyCredentialUserEntity userEntity) {
-            return userEntity.getName();
-        }
-
-        return principal.toString();
+        // authentication.getName()は、すべての認証方式で統一されたローカルusernameを返す
+        // - UserDetails: userDetails.getUsername()
+        // - OidcUser: カスタムクレーム"local_username"（CustomOidcUserServiceで設定）
+        // - PublicKeyCredentialUserEntity: userEntity.getName()
+        return authentication.getName();
     }
 
     /**
      * 認証情報から表示名を取得
+     * 表示名は各認証方式のコンテキストに応じて異なる値を返す
      *
      * @param authentication 認証情報
      * @return 表示名
@@ -146,18 +141,22 @@ public class PasskeyController {
     private String getDisplayName(Authentication authentication) {
         Object principal = authentication.getPrincipal();
 
+        // パスキー認証の場合: パスキー登録時の表示名
         if (principal instanceof PublicKeyCredentialUserEntity userEntity) {
             String displayName = userEntity.getDisplayName();
             if (displayName != null && !displayName.isEmpty()) {
                 return displayName;
             }
-        } else if (principal instanceof OidcUser oidcUser) {
+        }
+        // OIDC認証の場合: プロバイダーから取得したフルネーム
+        else if (principal instanceof OidcUser oidcUser) {
             String name = oidcUser.getFullName();
             if (name != null && !name.isEmpty()) {
                 return name;
             }
         }
 
+        // デフォルト: ローカルusernameを表示名として使用
         return getUsername(authentication);
     }
 }
