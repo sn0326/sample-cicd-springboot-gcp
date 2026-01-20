@@ -11,6 +11,10 @@ FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 COPY --from=builder /app/target/*.jar app.jar
 
+# タイムゾーンを日本に設定
+RUN apk add --no-cache tzdata
+ENV TZ=Asia/Tokyo
+
 # Cloud Run用
 ENV PORT=8080
 EXPOSE 8080
@@ -20,4 +24,5 @@ ENTRYPOINT ["java", \
   "-XX:MaxRAMPercentage=75.0", \
   "-XX:+UseContainerSupport", \
   "-Djava.security.egd=file:/dev/./urandom", \
+  "-Duser.timezone=Asia/Tokyo", \
   "-jar", "app.jar"]
