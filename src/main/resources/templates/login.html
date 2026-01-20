@@ -122,7 +122,18 @@
             }
         }
 
-        // Base64url エンコード関数
+        // Base64url エンコード/デコード関数
+        function base64urlToBuffer(base64url) {
+            const padding = '='.repeat((4 - (base64url.length % 4)) % 4);
+            const base64 = base64url.replace(/-/g, '+').replace(/_/g, '/') + padding;
+            const rawData = atob(base64);
+            const buffer = new Uint8Array(rawData.length);
+            for (let i = 0; i < rawData.length; ++i) {
+                buffer[i] = rawData.charCodeAt(i);
+            }
+            return buffer.buffer;
+        }
+
         function bufferToBase64url(buffer) {
             const bytes = new Uint8Array(buffer);
             let binary = '';
@@ -152,8 +163,18 @@
 
                 const options = await optionsResponse.json();
 
+                // バイナリデータをデコード
+                const publicKeyOptions = {
+                    ...options,
+                    challenge: base64urlToBuffer(options.challenge),
+                    allowCredentials: options.allowCredentials?.map(cred => ({
+                        ...cred,
+                        id: base64urlToBuffer(cred.id)
+                    })) || []
+                };
+
                 // Step 2: ブラウザの生体認証を実行
-                const credential = await navigator.credentials.get({ publicKey: options });
+                const credential = await navigator.credentials.get({ publicKey: publicKeyOptions });
 
                 if (!credential) {
                     throw new Error('認証がキャンセルされました');
@@ -170,6 +191,7 @@
                         userHandle: credential.response.userHandle ? bufferToBase64url(credential.response.userHandle) : null
                     },
                     type: credential.type,
+                    clientExtensionResults: credential.getClientExtensionResults ? credential.getClientExtensionResults() : {},
                     authenticatorAttachment: credential.authenticatorAttachment
                 };
 

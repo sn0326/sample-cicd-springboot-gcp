@@ -218,6 +218,7 @@
                                 transports: credential.response.getTransports ? credential.response.getTransports() : []
                             },
                             type: credential.type,
+                            clientExtensionResults: credential.getClientExtensionResults ? credential.getClientExtensionResults() : {},
                             authenticatorAttachment: credential.authenticatorAttachment
                         },
                         label: initData.displayName || initData.username
