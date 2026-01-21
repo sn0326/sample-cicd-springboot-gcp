@@ -206,4 +206,41 @@ public class SecurityNotificationService {
             log.error("アカウント有効化通知の送信中にエラーが発生しました", e);
         }
     }
+
+    /**
+     * パスワード再発行URL通知を送信します（ユーザー自身によるリセット）
+     *
+     * @param username ユーザー名
+     * @param email メールアドレス
+     * @param resetUrl パスワードリセットURL
+     * @param expiryMinutes トークンの有効期限（分）
+     */
+    public void sendPasswordResetNotification(String username, String email,
+                                              String resetUrl, int expiryMinutes) {
+        try {
+            log.info("パスワード再発行URL通知を送信: username={}, email={}", username, email);
+
+            Map<String, String> variables = new HashMap<>();
+            variables.put("username", username);
+            variables.put("resetUrl", resetUrl);
+            variables.put("expiryMinutes", String.valueOf(expiryMinutes));
+
+            String body = templateRenderer.render(MailTemplate.PASSWORD_REISSUE, variables);
+
+            MailMessage message = MailMessage.builder()
+                    .to(email)
+                    .subject(MailTemplate.PASSWORD_REISSUE.getDefaultSubject())
+                    .textBody(body)
+                    .build();
+
+            message.addMetadata("type", "password_reissue");
+            message.addMetadata("username", username);
+
+            var result = mailSender.send(message);
+            log.info("パスワード再発行URL通知の送信成功: messageId={}", result.getMessageId());
+
+        } catch (Exception e) {
+            log.error("パスワード再発行URL通知の送信中にエラーが発生しました", e);
+        }
+    }
 }

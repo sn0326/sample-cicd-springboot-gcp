@@ -17,6 +17,14 @@ public enum MailTemplate {
     ),
 
     /**
+     * パスワード再発行URL通知
+     */
+    PASSWORD_REISSUE(
+            "【重要】パスワード再発行のご案内",
+            "password_reissue"
+    ),
+
+    /**
      * パスワード変更完了通知
      */
     PASSWORD_CHANGED(

@@ -3,7 +3,8 @@ CREATE TABLE IF NOT EXISTS users (
     username VARCHAR(50) NOT NULL PRIMARY KEY,
     password VARCHAR(500) NOT NULL,
     enabled BOOLEAN NOT NULL,
-    password_must_change BOOLEAN NOT NULL DEFAULT FALSE
+    password_must_change BOOLEAN NOT NULL DEFAULT FALSE,
+    email VARCHAR(255)
 );
 
 -- Spring Security標準の権限テーブル
@@ -135,3 +136,29 @@ CREATE INDEX IF NOT EXISTS idx_user_passkey_bindings_username
     ON user_passkey_bindings(username);
 CREATE INDEX IF NOT EXISTS idx_user_passkey_bindings_user_entity_id
     ON user_passkey_bindings(user_entity_id);
+
+-- パスワードリセットトークンテーブル（OWASP準拠）
+CREATE TABLE IF NOT EXISTS password_reset_tokens (
+    token_hash VARCHAR(64) NOT NULL PRIMARY KEY,  -- SHA-256ハッシュ（Hex: 64文字）
+    username VARCHAR(50) NOT NULL,
+    expiry_date TIMESTAMP NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    used_at TIMESTAMP,
+    CONSTRAINT fk_password_reset_users
+        FOREIGN KEY(username)
+        REFERENCES users(username)
+        ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_password_reset_username ON password_reset_tokens(username);
+CREATE INDEX IF NOT EXISTS idx_password_reset_expiry ON password_reset_tokens(expiry_date);
+
+-- パスワードリセット試行記録テーブル（レート制限用）
+CREATE TABLE IF NOT EXISTS password_reset_attempts (
+    username VARCHAR(50) NOT NULL,
+    attempt_time TIMESTAMP NOT NULL,
+    PRIMARY KEY (username, attempt_time)
+);
+
+CREATE INDEX IF NOT EXISTS idx_password_reset_attempts_time
+    ON password_reset_attempts(attempt_time);
