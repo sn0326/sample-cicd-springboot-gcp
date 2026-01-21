@@ -21,6 +21,7 @@ public class MailTemplateRenderer {
     public String render(MailTemplate template, Map<String, String> variables) {
         return switch (template) {
             case PASSWORD_RESET -> renderPasswordReset(variables);
+            case PASSWORD_REISSUE -> renderPasswordReissue(variables);
             case PASSWORD_CHANGED -> renderPasswordChanged(variables);
             case SUSPICIOUS_LOGIN -> renderSuspiciousLogin(variables);
             case ACCOUNT_DISABLED -> renderAccountDisabled(variables);
@@ -49,6 +50,35 @@ public class MailTemplateRenderer {
                 このメールは自動送信されています。
                 返信はできませんのでご了承ください。
                 """, username, resetBy, tempPassword);
+    }
+
+    private String renderPasswordReissue(Map<String, String> variables) {
+        String username = variables.getOrDefault("username", "ユーザー");
+        String resetUrl = variables.getOrDefault("resetUrl", "");
+        String expiryMinutes = variables.getOrDefault("expiryMinutes", "30");
+
+        return String.format("""
+                %s 様
+
+                パスワード再発行のリクエストを受け付けました。
+
+                以下のURLにアクセスして、パスワードの再設定を行ってください。
+
+                【パスワード再設定URL】
+                %s
+
+                ※このURLは発行から%s分間有効です。
+                ※このURLは1回のみ使用可能です。
+
+                ――――――――――――――――――――――――
+                このメールに心当たりがない場合は、第三者がパスワード
+                リセットを試みた可能性があります。このメールを破棄し、
+                アカウントのセキュリティ状態を確認することをお勧めします。
+
+                ――――――――――――――――――――――――
+                このメールは自動送信されています。
+                返信はできませんのでご了承ください。
+                """, username, resetUrl, expiryMinutes);
     }
 
     private String renderPasswordChanged(Map<String, String> variables) {

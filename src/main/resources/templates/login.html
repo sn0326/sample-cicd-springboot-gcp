@@ -21,6 +21,8 @@
                 ログアウトしました。
             </div>
 
+            <div th:if="${success}" class="bg-green-50 text-green-700 border border-green-200 rounded-md p-3 mb-5 text-sm" th:text="${success}"></div>
+
             <form th:action="@{/login}" method="post">
                 <div class="mb-5">
                     <label for="username" class="block mb-2 text-gray-800 font-medium text-sm">ユーザー名</label>
@@ -49,6 +51,12 @@
                     ログイン
                 </button>
             </form>
+
+            <div class="text-center mt-4">
+                <a th:href="@{/reissue/forgotpassword}" class="text-sm text-slate-700 hover:text-slate-900 hover:underline">
+                    パスワードをお忘れの方
+                </a>
+            </div>
 
             <div class="my-6 flex items-center">
                 <hr class="flex-1 border-gray-300">

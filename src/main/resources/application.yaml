@@ -70,6 +70,13 @@ security:
   remember-me:
     token-validity-seconds: 1209600  # 14日間（2週間）
     cleanup-days: 30                  # 30日以上前のトークンを削除
+  password-reset:
+    token-expiry-minutes: 30        # トークン有効期限（分）
+    max-attempts-per-hour: 5        # 1時間あたりの最大試行回数（レート制限）
+
+# アプリケーション設定
+app:
+  base-url: ${BASE_URL:http://localhost:8080}  # パスワードリセットURL生成用
 
 # WebAuthn/Passkey設定
 webauthn:
