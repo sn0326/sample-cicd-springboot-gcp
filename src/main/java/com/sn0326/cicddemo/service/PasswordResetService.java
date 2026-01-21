@@ -6,13 +6,13 @@ import com.sn0326.cicddemo.model.PasswordResetAttempt;
 import com.sn0326.cicddemo.model.PasswordResetToken;
 import com.sn0326.cicddemo.repository.PasswordResetAttemptRepository;
 import com.sn0326.cicddemo.repository.PasswordResetTokenRepository;
+import com.sn0326.cicddemo.repository.UserRepository;
 import com.sn0326.cicddemo.service.notification.SecurityNotificationService;
 import com.sn0326.cicddemo.util.TokenGenerator;
 import com.sn0326.cicddemo.validator.PasswordValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -36,12 +36,12 @@ public class PasswordResetService {
 
     private final PasswordResetTokenRepository tokenRepository;
     private final PasswordResetAttemptRepository attemptRepository;
+    private final UserRepository userRepository;
     private final TokenGenerator tokenGenerator;
     private final PasswordEncoder passwordEncoder;
     private final PasswordValidator passwordValidator;
     private final SecurityNotificationService notificationService;
     private final JdbcUserDetailsManager userDetailsManager;
-    private final JdbcTemplate jdbcTemplate;
     private final TransactionTemplate requiresNewTransactionTemplate;
 
     @Value("${security.password-reset.token-expiry-minutes:30}")
@@ -77,7 +77,7 @@ public class PasswordResetService {
         }
 
         // メールアドレス取得
-        String email = getEmailForUser(username);
+        String email = userRepository.findEmailByUsername(username);
         if (email == null || email.isBlank()) {
             log.warn("User {} has no email address configured", username);
             return;
@@ -158,17 +158,14 @@ public class PasswordResetService {
 
         // パスワード更新
         String encodedPassword = passwordEncoder.encode(newPassword);
-        jdbcTemplate.update(
-                "UPDATE users SET password = ?, password_must_change = false WHERE username = ?",
-                encodedPassword, username
-        );
+        userRepository.updatePasswordAndClearMustChangeFlag(username, encodedPassword);
 
         // トークンを使用済みにマーク
         token.setUsedAt(LocalDateTime.now());
         tokenRepository.save(token);
 
         // パスワード変更完了通知
-        String email = getEmailForUser(username);
+        String email = userRepository.findEmailByUsername(username);
         if (email != null && !email.isBlank()) {
             notificationService.sendPasswordChangedNotification(username, email);
         }
@@ -217,25 +214,6 @@ public class PasswordResetService {
         } catch (Exception e) {
             // 試行記録の失敗はメイン処理に影響を与えない
             log.error("Failed to record password reset attempt for user: {}", username, e);
-        }
-    }
-
-    /**
-     * ユーザーのメールアドレスを取得
-     *
-     * @param username ユーザー名
-     * @return メールアドレス（見つからない場合はnull）
-     */
-    private String getEmailForUser(String username) {
-        try {
-            return jdbcTemplate.queryForObject(
-                    "SELECT email FROM users WHERE username = ?",
-                    String.class,
-                    username
-            );
-        } catch (Exception e) {
-            log.warn("Failed to retrieve email for user: {}", username, e);
-            return null;
         }
     }
 
