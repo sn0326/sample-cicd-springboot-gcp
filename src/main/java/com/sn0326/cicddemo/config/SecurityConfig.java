@@ -92,6 +92,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(authorize -> authorize
                 .requestMatchers("/login", "/css/**", "/js/**").permitAll()
                 .requestMatchers("/webauthn/**").permitAll()  // WebAuthn/Passkeyエンドポイント
+                .requestMatchers("/reissue/**").permitAll()  // パスワードリセット
                 .requestMatchers("/health").permitAll()
                 .requestMatchers("/force-change-password").authenticated()
                 .requestMatchers("/passkey/**").authenticated()  // パスキー管理画面
