@@ -2,7 +2,9 @@ package com.sn0326.cicddemo.service;
 
 import com.sn0326.cicddemo.exception.InvalidTokenException;
 import com.sn0326.cicddemo.exception.RateLimitExceededException;
+import com.sn0326.cicddemo.model.PasswordResetAttempt;
 import com.sn0326.cicddemo.model.PasswordResetToken;
+import com.sn0326.cicddemo.repository.PasswordResetAttemptRepository;
 import com.sn0326.cicddemo.repository.PasswordResetTokenRepository;
 import com.sn0326.cicddemo.service.notification.SecurityNotificationService;
 import com.sn0326.cicddemo.util.TokenGenerator;
@@ -18,6 +20,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.JdbcUserDetailsManager;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.LocalDateTime;
 
@@ -32,13 +35,14 @@ import java.time.LocalDateTime;
 public class PasswordResetService {
 
     private final PasswordResetTokenRepository tokenRepository;
-    private final PasswordResetAttemptService attemptService;
+    private final PasswordResetAttemptRepository attemptRepository;
     private final TokenGenerator tokenGenerator;
     private final PasswordEncoder passwordEncoder;
     private final PasswordValidator passwordValidator;
     private final SecurityNotificationService notificationService;
     private final JdbcUserDetailsManager userDetailsManager;
     private final JdbcTemplate jdbcTemplate;
+    private final TransactionTemplate requiresNewTransactionTemplate;
 
     @Value("${security.password-reset.token-expiry-minutes:30}")
     private int tokenExpiryMinutes;
@@ -60,7 +64,8 @@ public class PasswordResetService {
         checkRateLimit(username);
 
         // 試行記録（独立トランザクション、セキュリティのため、ユーザー存在有無に関わらず記録）
-        attemptService.recordAttempt(username);
+        // TransactionTemplateを使用することで、サービス間の直接呼び出しを避ける（TERASOLUNAガイドライン準拠）
+        recordAttempt(username);
 
         // ユーザー存在確認（存在しなくてもエラーを出さない - ユーザー名列挙攻撃対策）
         UserDetails userDetails;
@@ -179,12 +184,39 @@ public class PasswordResetService {
      */
     private void checkRateLimit(String username) {
         LocalDateTime oneHourAgo = LocalDateTime.now().minusHours(1);
-        long attemptCount = attemptService.countAttemptsSince(username, oneHourAgo);
+        long attemptCount = attemptRepository.countByUsernameAndAttemptTimeSince(
+                username, oneHourAgo);
 
         if (attemptCount >= maxAttemptsPerHour) {
             log.warn("Rate limit exceeded for user: {}", username);
             throw new RateLimitExceededException(
                     "パスワードリセットの試行回数が上限に達しました。1時間後に再試行してください");
+        }
+    }
+
+    /**
+     * パスワードリセット試行を記録（独立トランザクション）
+     *
+     * TransactionTemplateを使用してREQUIRES_NEWトランザクションで実行します。
+     * これにより、メイン処理のトランザクションとは独立して記録が保存されます。
+     *
+     * TERASOLUNAガイドラインに従い、サービス間の直接呼び出しを避け、
+     * プログラマティックなトランザクション制御を使用しています。
+     *
+     * @param username ユーザー名
+     */
+    private void recordAttempt(String username) {
+        try {
+            requiresNewTransactionTemplate.execute(status -> {
+                PasswordResetAttempt attempt = new PasswordResetAttempt(
+                        username, LocalDateTime.now());
+                attemptRepository.save(attempt);
+                log.debug("Password reset attempt recorded for user: {}", username);
+                return null;
+            });
+        } catch (Exception e) {
+            // 試行記録の失敗はメイン処理に影響を与えない
+            log.error("Failed to record password reset attempt for user: {}", username, e);
         }
     }
 
@@ -220,7 +252,7 @@ public class PasswordResetService {
         tokenRepository.deleteExpiredTokens(now);
 
         // 7日以上前の試行記録を削除
-        attemptService.deleteOldAttempts(now.minusDays(7));
+        attemptRepository.deleteOldAttempts(now.minusDays(7));
 
         log.debug("Cleaned up expired password reset tokens and old attempts");
     }
