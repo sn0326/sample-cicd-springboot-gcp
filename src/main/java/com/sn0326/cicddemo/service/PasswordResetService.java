@@ -2,9 +2,7 @@ package com.sn0326.cicddemo.service;
 
 import com.sn0326.cicddemo.exception.InvalidTokenException;
 import com.sn0326.cicddemo.exception.RateLimitExceededException;
-import com.sn0326.cicddemo.model.PasswordResetAttempt;
 import com.sn0326.cicddemo.model.PasswordResetToken;
-import com.sn0326.cicddemo.repository.PasswordResetAttemptRepository;
 import com.sn0326.cicddemo.repository.PasswordResetTokenRepository;
 import com.sn0326.cicddemo.service.notification.SecurityNotificationService;
 import com.sn0326.cicddemo.util.TokenGenerator;
@@ -19,7 +17,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.JdbcUserDetailsManager;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -35,7 +32,7 @@ import java.time.LocalDateTime;
 public class PasswordResetService {
 
     private final PasswordResetTokenRepository tokenRepository;
-    private final PasswordResetAttemptRepository attemptRepository;
+    private final PasswordResetAttemptService attemptService;
     private final TokenGenerator tokenGenerator;
     private final PasswordEncoder passwordEncoder;
     private final PasswordValidator passwordValidator;
@@ -62,8 +59,8 @@ public class PasswordResetService {
         // レート制限チェック
         checkRateLimit(username);
 
-        // 試行記録（セキュリティのため、ユーザー存在有無に関わらず記録）
-        recordAttempt(username);
+        // 試行記録（独立トランザクション、セキュリティのため、ユーザー存在有無に関わらず記録）
+        attemptService.recordAttempt(username);
 
         // ユーザー存在確認（存在しなくてもエラーを出さない - ユーザー名列挙攻撃対策）
         UserDetails userDetails;
@@ -182,26 +179,13 @@ public class PasswordResetService {
      */
     private void checkRateLimit(String username) {
         LocalDateTime oneHourAgo = LocalDateTime.now().minusHours(1);
-        long attemptCount = attemptRepository.countByUsernameAndAttemptTimeSince(
-                username, oneHourAgo);
+        long attemptCount = attemptService.countAttemptsSince(username, oneHourAgo);
 
         if (attemptCount >= maxAttemptsPerHour) {
             log.warn("Rate limit exceeded for user: {}", username);
             throw new RateLimitExceededException(
                     "パスワードリセットの試行回数が上限に達しました。1時間後に再試行してください");
         }
-    }
-
-    /**
-     * 試行記録（独立トランザクション）
-     *
-     * @param username ユーザー名
-     */
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    protected void recordAttempt(String username) {
-        PasswordResetAttempt attempt = new PasswordResetAttempt(
-                username, LocalDateTime.now());
-        attemptRepository.save(attempt);
     }
 
     /**
@@ -236,7 +220,7 @@ public class PasswordResetService {
         tokenRepository.deleteExpiredTokens(now);
 
         // 7日以上前の試行記録を削除
-        attemptRepository.deleteOldAttempts(now.minusDays(7));
+        attemptService.deleteOldAttempts(now.minusDays(7));
 
         log.debug("Cleaned up expired password reset tokens and old attempts");
     }
