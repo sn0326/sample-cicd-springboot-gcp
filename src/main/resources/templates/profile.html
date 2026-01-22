@@ -33,7 +33,12 @@
             </div>
 
             <div class="mb-8">
-                <h2 class="text-gray-800 mb-4 text-2xl font-bold">アカウント情報</h2>
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-gray-800 text-2xl font-bold">アカウント情報</h2>
+                    <a th:href="@{/profile/edit}" class="px-4 py-2 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700 transition-colors inline-block no-underline">
+                        ✏️ プロフィールを編集
+                    </a>
+                </div>
                 <div class="bg-gray-50 p-5 rounded-lg">
                     <p class="py-2 text-gray-700">
                         <strong>ユーザー名:</strong> <span th:text="${username}">user</span>

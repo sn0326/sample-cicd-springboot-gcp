@@ -93,9 +93,11 @@ public class SecurityConfig {
                 .requestMatchers("/login", "/css/**", "/js/**").permitAll()
                 .requestMatchers("/webauthn/**").permitAll()  // WebAuthn/Passkeyエンドポイント
                 .requestMatchers("/reissue/**").permitAll()  // パスワードリセット
+                .requestMatchers("/verify-email").permitAll()  // メールアドレス確認
                 .requestMatchers("/health").permitAll()
                 .requestMatchers("/force-change-password").authenticated()
                 .requestMatchers("/passkey/**").authenticated()  // パスキー管理画面
+                .requestMatchers("/profile/**").authenticated()  // プロフィール管理
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )

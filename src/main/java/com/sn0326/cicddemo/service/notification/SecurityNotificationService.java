@@ -243,4 +243,79 @@ public class SecurityNotificationService {
             log.error("パスワード再発行URL通知の送信中にエラーが発生しました", e);
         }
     }
+
+    /**
+     * メールアドレス変更確認メールを送信します
+     *
+     * @param username ユーザー名
+     * @param newEmail 新しいメールアドレス
+     * @param verificationUrl 確認URL
+     * @param expiryMinutes トークンの有効期限（分）
+     */
+    public void sendEmailChangeVerification(String username, String newEmail,
+                                           String verificationUrl, int expiryMinutes) {
+        try {
+            log.info("メールアドレス変更確認メールを送信: username={}, newEmail={}", username, newEmail);
+
+            Map<String, String> variables = new HashMap<>();
+            variables.put("username", username);
+            variables.put("newEmail", newEmail);
+            variables.put("verificationUrl", verificationUrl);
+            variables.put("expiryMinutes", String.valueOf(expiryMinutes));
+
+            String body = templateRenderer.render(MailTemplate.EMAIL_CHANGE_VERIFICATION, variables);
+
+            MailMessage message = MailMessage.builder()
+                    .to(newEmail)
+                    .subject(MailTemplate.EMAIL_CHANGE_VERIFICATION.getDefaultSubject())
+                    .textBody(body)
+                    .build();
+
+            message.addMetadata("type", "email_change_verification");
+            message.addMetadata("username", username);
+
+            var result = mailSender.send(message);
+            log.info("メールアドレス変更確認メールの送信成功: messageId={}", result.getMessageId());
+
+        } catch (Exception e) {
+            log.error("メールアドレス変更確認メールの送信中にエラーが発生しました", e);
+        }
+    }
+
+    /**
+     * メールアドレス変更完了通知を送信します
+     *
+     * @param username ユーザー名
+     * @param oldEmail 旧メールアドレス
+     * @param newEmail 新メールアドレス
+     */
+    public void sendEmailChangedNotification(String username, String oldEmail, String newEmail) {
+        try {
+            log.info("メールアドレス変更通知を送信: username={}, oldEmail={}, newEmail={}", username, oldEmail, newEmail);
+
+            Map<String, String> variables = new HashMap<>();
+            variables.put("username", username);
+            variables.put("oldEmail", oldEmail);
+            variables.put("newEmail", newEmail);
+            variables.put("changedAt", LocalDateTime.now().format(DATETIME_FORMATTER));
+
+            String body = templateRenderer.render(MailTemplate.EMAIL_CHANGED, variables);
+
+            // 旧メールアドレスに送信
+            MailMessage message = MailMessage.builder()
+                    .to(oldEmail)
+                    .subject(MailTemplate.EMAIL_CHANGED.getDefaultSubject())
+                    .textBody(body)
+                    .build();
+
+            message.addMetadata("type", "email_changed");
+            message.addMetadata("username", username);
+
+            var result = mailSender.send(message);
+            log.info("メールアドレス変更通知の送信成功: messageId={}", result.getMessageId());
+
+        } catch (Exception e) {
+            log.error("メールアドレス変更通知の送信中にエラーが発生しました", e);
+        }
+    }
 }

@@ -57,4 +57,20 @@ public class JdbcUserRepository implements UserRepository {
                 username
         );
     }
+
+    /**
+     * メールアドレスを更新
+     *
+     * @param username ユーザー名
+     * @param email 新しいメールアドレス
+     * @return 更新された行数
+     */
+    @Override
+    public int updateEmail(String username, String email) {
+        return jdbcTemplate.update(
+                "UPDATE users SET email = ? WHERE username = ?",
+                email,
+                username
+        );
+    }
 }

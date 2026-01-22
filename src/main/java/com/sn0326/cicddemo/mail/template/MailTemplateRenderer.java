@@ -26,6 +26,8 @@ public class MailTemplateRenderer {
             case SUSPICIOUS_LOGIN -> renderSuspiciousLogin(variables);
             case ACCOUNT_DISABLED -> renderAccountDisabled(variables);
             case ACCOUNT_ENABLED -> renderAccountEnabled(variables);
+            case EMAIL_CHANGE_VERIFICATION -> renderEmailChangeVerification(variables);
+            case EMAIL_CHANGED -> renderEmailChanged(variables);
         };
     }
 
@@ -163,5 +165,63 @@ public class MailTemplateRenderer {
                 このメールは自動送信されています。
                 返信はできませんのでご了承ください。
                 """, username, enabledBy);
+    }
+
+    private String renderEmailChangeVerification(Map<String, String> variables) {
+        String username = variables.getOrDefault("username", "ユーザー");
+        String newEmail = variables.getOrDefault("newEmail", "");
+        String verificationUrl = variables.getOrDefault("verificationUrl", "");
+        String expiryMinutes = variables.getOrDefault("expiryMinutes", "30");
+
+        return String.format("""
+                %s 様
+
+                メールアドレス変更のリクエストを受け付けました。
+
+                新しいメールアドレス: %s
+
+                以下のURLにアクセスして、メールアドレスの変更を完了してください。
+
+                【確認URL】
+                %s
+
+                ※このURLは発行から%s分間有効です。
+                ※このURLは1回のみ使用可能です。
+
+                ――――――――――――――――――――――――
+                このメールに心当たりがない場合は、第三者がメールアドレス
+                変更を試みた可能性があります。このメールを破棄し、
+                アカウントのセキュリティ状態を確認することをお勧めします。
+
+                ――――――――――――――――――――――――
+                このメールは自動送信されています。
+                返信はできませんのでご了承ください。
+                """, username, newEmail, verificationUrl, expiryMinutes);
+    }
+
+    private String renderEmailChanged(Map<String, String> variables) {
+        String username = variables.getOrDefault("username", "ユーザー");
+        String oldEmail = variables.getOrDefault("oldEmail", "");
+        String newEmail = variables.getOrDefault("newEmail", "");
+        String changedAt = variables.getOrDefault("changedAt", "現在");
+
+        return String.format("""
+                %s 様
+
+                メールアドレスが正常に変更されました。
+
+                変更前: %s
+                変更後: %s
+                変更日時: %s
+
+                今後のお知らせは新しいメールアドレスに送信されます。
+
+                もしこの変更にお心当たりがない場合は、
+                すぐにシステム管理者にご連絡ください。
+
+                ――――――――――――――――――――――――
+                このメールは自動送信されています。
+                返信はできませんのでご了承ください。
+                """, username, oldEmail, newEmail, changedAt);
     }
 }

@@ -54,6 +54,22 @@ public enum MailTemplate {
     ACCOUNT_ENABLED(
             "アカウント有効化のお知らせ",
             "account_enabled"
+    ),
+
+    /**
+     * メールアドレス変更確認
+     */
+    EMAIL_CHANGE_VERIFICATION(
+            "メールアドレス変更のご確認",
+            "email_change_verification"
+    ),
+
+    /**
+     * メールアドレス変更完了通知
+     */
+    EMAIL_CHANGED(
+            "メールアドレスが変更されました",
+            "email_changed"
     );
 
     /**
