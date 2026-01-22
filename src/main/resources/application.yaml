@@ -76,7 +76,7 @@ security:
 
 # アプリケーション設定
 app:
-  base-url: ${BASE_URL:http://localhost:8080}  # パスワードリセットURL生成用
+  base-url: ${BASE_URL:https://sample-cicd-springboot-gcp.sn0326.com}  # パスワードリセットURL生成用
 
 # WebAuthn/Passkey設定
 webauthn:
