@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>メールアドレス確認 - Spring Boot Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen flex items-center justify-center p-5 bg-gray-50">
+    <div class="w-full max-w-md bg-white rounded-lg shadow-2xl overflow-hidden">
+        <header class="bg-green-600 text-white p-8 text-center">
+            <div class="text-5xl mb-4">✅</div>
+            <h1 class="text-2xl font-bold">メールアドレス確認完了</h1>
+        </header>
+
+        <main class="p-10">
+            <div class="bg-green-50 border border-green-200 rounded-md p-4 mb-6">
+                <p class="text-green-700 text-center" th:text="${message}">
+                    メールアドレスの変更が完了しました
+                </p>
+            </div>
+
+            <p class="text-gray-600 text-sm text-center mb-6">
+                メールアドレスの変更が正常に完了しました。<br>
+                新しいメールアドレスでログインできます。
+            </p>
+
+            <div class="flex flex-col gap-3">
+                <a th:href="@{/profile}" class="block w-full bg-blue-600 text-white text-center py-2 px-4 rounded-md hover:bg-blue-700 transition-colors font-medium no-underline">
+                    プロフィールへ
+                </a>
+
+                <a th:href="@{/home}" class="block w-full bg-gray-200 text-gray-700 text-center py-2 px-4 rounded-md hover:bg-gray-300 transition-colors no-underline">
+                    ホームへ
+                </a>
+            </div>
+        </main>
+
+        <footer class="bg-gray-50 p-5 text-center text-gray-600 text-sm">
+            <p>Spring Security Email Verification</p>
+        </footer>
+    </div>
+</body>
+</html>

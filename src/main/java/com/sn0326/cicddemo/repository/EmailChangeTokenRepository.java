@@ -1,6 +1,6 @@
 package com.sn0326.cicddemo.repository;
 
-import com.sn0326.cicddemo.model.PasswordResetToken;
+import com.sn0326.cicddemo.model.EmailChangeToken;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -11,24 +11,24 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 /**
- * パスワードリセットトークンのリポジトリ
+ * メールアドレス変更トークンのリポジトリ
  */
 @Repository
-public interface PasswordResetTokenRepository extends JpaRepository<PasswordResetToken, String> {
+public interface EmailChangeTokenRepository extends JpaRepository<EmailChangeToken, String> {
 
     /**
      * トークンハッシュでトークン情報を取得
      * @param tokenHash トークンのSHA-256ハッシュ値
-     * @return パスワードリセットトークン
+     * @return メールアドレス変更トークン
      */
-    Optional<PasswordResetToken> findByTokenHash(String tokenHash);
+    Optional<EmailChangeToken> findByTokenHash(String tokenHash);
 
     /**
      * 指定ユーザーの未使用トークンを削除
      * @param username ユーザー名
      */
     @Modifying
-    @Query("DELETE FROM PasswordResetToken t WHERE t.username = :username AND t.usedAt IS NULL")
+    @Query("DELETE FROM EmailChangeToken t WHERE t.username = :username AND t.usedAt IS NULL")
     void deleteUnusedTokensByUsername(@Param("username") String username);
 
     /**
@@ -37,6 +37,6 @@ public interface PasswordResetTokenRepository extends JpaRepository<PasswordRese
      * @return 削除された行数
      */
     @Modifying
-    @Query("DELETE FROM PasswordResetToken t WHERE t.expiryDate < :dateTime")
+    @Query("DELETE FROM EmailChangeToken t WHERE t.expiryDate < :dateTime")
     int deleteExpiredTokens(@Param("dateTime") LocalDateTime dateTime);
 }

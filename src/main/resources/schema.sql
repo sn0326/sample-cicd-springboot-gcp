@@ -162,3 +162,30 @@ CREATE TABLE IF NOT EXISTS password_reset_attempts (
 
 CREATE INDEX IF NOT EXISTS idx_password_reset_attempts_time
     ON password_reset_attempts(attempt_time);
+
+-- メールアドレス変更トークンテーブル（OWASP準拠）
+CREATE TABLE IF NOT EXISTS email_change_tokens (
+    token_hash VARCHAR(64) NOT NULL PRIMARY KEY,  -- SHA-256ハッシュ（Hex: 64文字）
+    username VARCHAR(50) NOT NULL,
+    new_email VARCHAR(255) NOT NULL,
+    expiry_date TIMESTAMP NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    used_at TIMESTAMP,
+    CONSTRAINT fk_email_change_users
+        FOREIGN KEY(username)
+        REFERENCES users(username)
+        ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_email_change_username ON email_change_tokens(username);
+CREATE INDEX IF NOT EXISTS idx_email_change_expiry ON email_change_tokens(expiry_date);
+
+-- メールアドレス変更試行記録テーブル（レート制限用）
+CREATE TABLE IF NOT EXISTS email_change_attempts (
+    username VARCHAR(50) NOT NULL,
+    attempt_time TIMESTAMP NOT NULL,
+    PRIMARY KEY (username, attempt_time)
+);
+
+CREATE INDEX IF NOT EXISTS idx_email_change_attempts_time
+    ON email_change_attempts(attempt_time);

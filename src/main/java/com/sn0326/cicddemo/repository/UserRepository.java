@@ -24,4 +24,13 @@ public interface UserRepository {
      * @return 更新された行数
      */
     int updatePasswordAndClearMustChangeFlag(String username, String encodedPassword);
+
+    /**
+     * メールアドレスを更新
+     *
+     * @param username ユーザー名
+     * @param email 新しいメールアドレス
+     * @return 更新された行数
+     */
+    int updateEmail(String username, String email);
 }
