@@ -15,6 +15,7 @@ Sample CI/CD Spring Boot Application on Google Cloud Platform
 - [データベース設計](#データベース設計)
 - [設定](#設定)
 - [デプロイ](#デプロイ)
+- [ドキュメント](#ドキュメント)
 
 ## 技術スタック
 
@@ -73,10 +74,16 @@ Sample CI/CD Spring Boot Application on Google Cloud Platform
 - Thymeleafテンプレートレンダリング
 - セキュリティ通知の送信
 
-### ⏰ スケジューラー
-- 弱いパスワードキャッシュの定期更新（1時間毎）
-- 古い認証失敗記録の自動削除（7日以上前）
-- Remember Meトークンの自動クリーンアップ（30日以上前）
+### ⏰ データクリーンアップ
+- **定期実行**: 弱いパスワードキャッシュの更新、認証失敗記録削除
+- **確率的実行**: トークンクリーンアップ（リクエスト時に確率的に実行）
+  - パスワードリセットトークン
+  - メールアドレス変更トークン
+  - 試行記録（レート制限用）
+- **Remember Me**: トークンの自動クリーンアップ（30日以上前）
+
+> 💡 **注意**: トークンクリーンアップは`@Scheduled`を使用せず、リクエスト時確率的に実行されます。
+> 詳細は [クリーンアップ戦略ドキュメント](docs/CLEANUP_STRATEGY.md) を参照してください。
 
 ## プロジェクト構成
 
@@ -448,6 +455,12 @@ gcloud run deploy sample-cicd-springboot-gcp \
   --region asia-northeast1 \
   --allow-unauthenticated
 ```
+
+## ドキュメント
+
+プロジェクトの詳細なドキュメントは`docs/`ディレクトリに格納されています：
+
+- **[クリーンアップ戦略](docs/CLEANUP_STRATEGY.md)**: トークンクリーンアップの実装方針と代替案の検討経緯
 
 ## CI/CD
 
