@@ -32,8 +32,9 @@ public interface EmailChangeAttemptRepository
     /**
      * 古い試行記録を削除
      * @param dateTime 基準日時（これより古い記録を削除）
+     * @return 削除された行数
      */
     @Modifying
     @Query("DELETE FROM EmailChangeAttempt a WHERE a.id.attemptTime < :dateTime")
-    void deleteOldAttempts(@Param("dateTime") LocalDateTime dateTime);
+    int deleteOldAttempts(@Param("dateTime") LocalDateTime dateTime);
 }

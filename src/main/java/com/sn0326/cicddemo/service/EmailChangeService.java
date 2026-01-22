@@ -12,12 +12,12 @@ import com.sn0326.cicddemo.util.TokenGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.LocalDateTime;
+import java.util.Random;
 
 /**
  * メールアドレス変更機能を提供するサービス
@@ -44,6 +44,11 @@ public class EmailChangeService {
 
     @Value("${app.base-url:http://localhost:8080}")
     private String baseUrl;
+
+    private final Random random = new Random();
+
+    @Value("${security.email-change.cleanup-probability:0.1}")
+    private double cleanupProbability;
 
     /**
      * メールアドレス変更申請
@@ -93,6 +98,9 @@ public class EmailChangeService {
                 username, newEmail, verificationUrl, tokenExpiryMinutes);
 
         log.info("Email change token generated for user: {}", username);
+
+        // 確率的にクリーンアップを実行
+        maybeCleanup();
     }
 
     /**
@@ -147,6 +155,9 @@ public class EmailChangeService {
         }
 
         log.info("Email successfully changed for user: {} from {} to {}", username, oldEmail, newEmail);
+
+        // 確率的にクリーンアップを実行
+        maybeCleanup();
     }
 
     /**
@@ -189,19 +200,38 @@ public class EmailChangeService {
 
     /**
      * 期限切れトークンと古い試行記録のクリーンアップ
-     * 毎時0分に実行
+     *
+     * 注意: @Scheduledは常駐アプリケーションでないと動作しないため、
+     * 手動呼び出しまたはリクエスト時の確率的クリーンアップを使用してください。
      */
-    @Scheduled(cron = "0 0 * * * *")
     @Transactional
     public void cleanupExpiredData() {
-        LocalDateTime now = LocalDateTime.now();
+        try {
+            LocalDateTime now = LocalDateTime.now();
 
-        // 期限切れトークン削除
-        tokenRepository.deleteExpiredTokens(now);
+            // 期限切れトークン削除
+            int deletedTokens = tokenRepository.deleteExpiredTokens(now);
 
-        // 7日以上前の試行記録を削除
-        attemptRepository.deleteOldAttempts(now.minusDays(7));
+            // 7日以上前の試行記録を削除
+            int deletedAttempts = attemptRepository.deleteOldAttempts(now.minusDays(7));
 
-        log.debug("Cleaned up expired email change tokens and old attempts");
+            if (deletedTokens > 0 || deletedAttempts > 0) {
+                log.info("Cleaned up {} expired email change tokens and {} old attempts",
+                        deletedTokens, deletedAttempts);
+            }
+        } catch (Exception e) {
+            log.error("Failed to cleanup expired email change data", e);
+        }
+    }
+
+    /**
+     * 確率的にクリーンアップを実行
+     * リクエスト処理時に呼び出されることで、パフォーマンスへの影響を最小限に抑えつつクリーンアップを実行
+     */
+    private void maybeCleanup() {
+        if (random.nextDouble() < cleanupProbability) {
+            log.debug("Probabilistic cleanup triggered for email change tokens");
+            cleanupExpiredData();
+        }
     }
 }

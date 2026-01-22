@@ -34,8 +34,9 @@ public interface EmailChangeTokenRepository extends JpaRepository<EmailChangeTok
     /**
      * 期限切れトークンを削除
      * @param dateTime 基準日時（これより古いexpiryDateを持つトークンを削除）
+     * @return 削除された行数
      */
     @Modifying
     @Query("DELETE FROM EmailChangeToken t WHERE t.expiryDate < :dateTime")
-    void deleteExpiredTokens(@Param("dateTime") LocalDateTime dateTime);
+    int deleteExpiredTokens(@Param("dateTime") LocalDateTime dateTime);
 }
