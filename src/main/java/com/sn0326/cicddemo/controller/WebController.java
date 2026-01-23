@@ -47,7 +47,7 @@ public class WebController {
         return "login";
     }
 
-    @GetMapping("/home")
+    @GetMapping("/")
     public String home(Model model, Authentication authentication) {
         if (authentication != null) {
             String username = authentication.getName();
@@ -99,6 +99,6 @@ public class WebController {
         );
 
         redirectAttributes.addFlashAttribute("success", "パスワードが正常に変更されました");
-        return "redirect:/home";
+        return "redirect:/";
     }
 }

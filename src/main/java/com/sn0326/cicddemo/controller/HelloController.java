@@ -10,11 +10,6 @@ import java.time.format.DateTimeFormatter;
 @RestController
 public class HelloController {
 
-    @GetMapping("/")
-    public String hello() {
-        return "🚀 Sample CI/CD: Spring Boot on GCP Cloud Run!";
-    }
-
     @GetMapping("/health")
     public String health() {
         return "OK";

@@ -33,7 +33,7 @@ public class FormAuthenticationSuccessHandler extends SavedRequestAwareAuthentic
         this.lastLoginService = lastLoginService;
         this.forcePasswordChangeService = forcePasswordChangeService;
         this.lockoutService = lockoutService;
-        setDefaultTargetUrl("/home");
+        setDefaultTargetUrl("/");
     }
 
     @Override

@@ -48,6 +48,6 @@ public class ForcePasswordChangeController {
         forcePasswordChangeService.changePasswordWithoutCurrentPassword(username, newPassword);
 
         redirectAttributes.addFlashAttribute("success", "パスワードが正常に変更されました");
-        return "redirect:/home";
+        return "redirect:/";
     }
 }

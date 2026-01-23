@@ -29,7 +29,7 @@ public class OidcAuthenticationSuccessHandler extends SavedRequestAwareAuthentic
             LastLoginService lastLoginService) {
         this.oidcConnectionService = oidcConnectionService;
         this.lastLoginService = lastLoginService;
-        setDefaultTargetUrl("/home");
+        setDefaultTargetUrl("/");
     }
 
     @Override
