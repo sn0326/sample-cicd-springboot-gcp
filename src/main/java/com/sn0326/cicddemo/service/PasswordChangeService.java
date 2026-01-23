@@ -1,5 +1,6 @@
 package com.sn0326.cicddemo.service;
 
+import com.sn0326.cicddemo.exception.InvalidPasswordException;
 import com.sn0326.cicddemo.service.notification.SecurityNotificationService;
 import com.sn0326.cicddemo.validator.PasswordValidationResult;
 import com.sn0326.cicddemo.validator.PasswordValidator;
@@ -35,14 +36,14 @@ public class PasswordChangeService {
         PasswordValidationResult validationResult = passwordValidator.validate(newPassword, username);
 
         if (!validationResult.isValid()) {
-            throw new IllegalArgumentException(validationResult.getErrorMessage());
+            throw new InvalidPasswordException(validationResult.getErrorMessage());
         }
 
         // 現在のパスワードを確認
         UserDetails user = userDetailsManager.loadUserByUsername(username);
 
         if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
-            throw new IllegalArgumentException("現在のパスワードが正しくありません");
+            throw new InvalidPasswordException("現在のパスワードが正しくありません");
         }
 
         // パスワードを変更

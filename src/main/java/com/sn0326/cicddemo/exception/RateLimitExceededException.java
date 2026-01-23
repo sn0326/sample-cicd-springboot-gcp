@@ -6,7 +6,7 @@ package com.sn0326.cicddemo.exception;
  * パスワードリセット申請の試行回数が制限を超えた場合に発生します。
  * ブルートフォース攻撃対策として使用されます。
  */
-public class RateLimitExceededException extends RuntimeException {
+public class RateLimitExceededException extends BusinessException {
 
     /**
      * コンストラクタ

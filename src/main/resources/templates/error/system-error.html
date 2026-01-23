@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>システムエラー - Spring Boot Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen flex items-center justify-center p-5 bg-gray-50">
+    <div class="w-full max-w-md">
+        <div class="bg-white rounded-lg shadow-2xl p-10">
+            <div class="text-center mb-6">
+                <div class="text-6xl mb-4">⚠️</div>
+                <h1 class="text-2xl font-bold text-gray-800 mb-2">システムエラー</h1>
+                <p class="text-sm text-gray-600">申し訳ございません。システムエラーが発生しました。</p>
+            </div>
+
+            <div class="bg-red-50 border border-red-200 rounded-md p-4 mb-5" th:if="${errorMessage}">
+                <p class="text-sm text-red-700" th:text="${errorMessage}"></p>
+            </div>
+
+            <div class="bg-gray-100 rounded-md p-4 mb-6" th:if="${exceptionCode}">
+                <p class="text-xs text-gray-500 mb-1">エラーコード:</p>
+                <p class="text-lg font-mono font-bold text-gray-800" th:text="${exceptionCode}"></p>
+                <p class="text-xs text-gray-500 mt-2">
+                    このエラーコードをお問い合わせ時にお伝えください。
+                </p>
+            </div>
+
+            <div class="bg-blue-50 border border-blue-200 rounded-md p-4 mb-6">
+                <p class="text-sm text-blue-700 mb-2 font-semibold">対処方法：</p>
+                <ul class="list-disc list-inside text-sm text-blue-600 space-y-1">
+                    <li>ページを再読み込みしてください</li>
+                    <li>しばらく時間をおいてから再度お試しください</li>
+                    <li>問題が続く場合は管理者にご連絡ください</li>
+                </ul>
+            </div>
+
+            <div class="space-y-3">
+                <button onclick="location.reload()"
+                        class="block w-full py-3 bg-slate-700 text-white rounded-md text-base font-semibold hover:bg-slate-800 transition-colors text-center">
+                    ページを再読み込み
+                </button>
+
+                <a th:href="@{/}"
+                   class="block w-full py-3 bg-gray-200 text-gray-800 rounded-md text-base font-semibold hover:bg-gray-300 transition-colors text-center">
+                    ホームに戻る
+                </a>
+            </div>
+
+            <div class="mt-6 pt-6 border-t border-gray-200">
+                <p class="text-xs text-gray-500 text-center">
+                    問題が解決しない場合は、上記のエラーコードと共に<br>
+                    管理者にお問い合わせください。
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
