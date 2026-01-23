@@ -103,20 +103,7 @@ public class GlobalExceptionHandler {
             SystemException ex,
             Model model) {
 
-        // 例外コードに基づいてログレベルを判定
-        SystemException.LogLevel logLevel = ex.getLogLevel();
-        switch (logLevel) {
-            case INFO:
-                log.info("System exception [{}]: {}", ex.getCode(), ex.getMessage());
-                break;
-            case WARN:
-                log.warn("System exception [{}]: {}", ex.getCode(), ex.getMessage(), ex);
-                break;
-            case ERROR:
-            default:
-                log.error("System exception [{}]: {}", ex.getCode(), ex.getMessage(), ex);
-                break;
-        }
+        log.error("System exception [{}]: {}", ex.getCode(), ex.getMessage(), ex);
 
         model.addAttribute("exceptionCode", ex.getCode());
         return "error/system-error";
