@@ -10,6 +10,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 /**
  * グローバル例外ハンドラー
@@ -85,6 +86,31 @@ public class GlobalExceptionHandler {
 
         log.warn("Resource not found: {}", ex.getMessage());
         model.addAttribute("errorMessage", ex.getMessage());
+        return "error/404";
+    }
+
+    /**
+     * Spring MVCリソース未検出例外のハンドリング（404エラー）
+     *
+     * 静的リソースやハンドラーが見つからない場合にSpring Frameworkがスローする例外を処理。
+     * org.springframework.web.servlet.resource.NoResourceFoundExceptionは
+     * 存在しないパスへのアクセス時に発生するため、404エラーとして扱う。
+     *
+     * @param ex 発生したNoResourceFoundException
+     * @param request HTTPリクエスト（リクエストURI取得用）
+     * @param model ビューに渡すモデル
+     * @return 404エラーページのビュー名
+     */
+    @ExceptionHandler(NoResourceFoundException.class)
+    public String handleNoResourceFoundException(
+            NoResourceFoundException ex,
+            HttpServletRequest request,
+            Model model) {
+
+        String requestUri = request.getRequestURI();
+        log.warn("No resource found for request: {}", requestUri);
+        model.addAttribute("errorMessage", "お探しのページは見つかりませんでした。");
+        model.addAttribute("requestUri", requestUri);
         return "error/404";
     }
 
