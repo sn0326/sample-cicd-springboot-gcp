@@ -33,12 +33,7 @@
             </div>
 
             <div class="mb-8">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-gray-800 text-2xl font-bold">アカウント情報</h2>
-                    <a th:href="@{/profile/edit}" class="px-4 py-2 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700 transition-colors inline-block no-underline">
-                        ✏️ プロフィールを編集
-                    </a>
-                </div>
+                <h2 class="text-gray-800 mb-4 text-2xl font-bold">アカウント情報</h2>
                 <div class="bg-gray-50 p-5 rounded-lg">
                     <p class="py-2 text-gray-700">
                         <strong>ユーザー名:</strong> <span th:text="${username}">user</span>
@@ -46,6 +41,28 @@
                             | 前回ログイン: <span th:text="${#temporals.format(lastLogin, 'yyyy/MM/dd HH:mm')}"></span>
                         </span>
                     </p>
+                </div>
+            </div>
+
+            <div class="mb-8">
+                <h2 class="text-gray-800 mb-4 text-2xl font-bold">アカウント設定</h2>
+                <div class="bg-gray-50 p-5 rounded-lg">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <a th:href="@{/profile/edit/email}" class="flex items-center gap-3 p-4 bg-white rounded-md border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all no-underline">
+                            <div class="text-2xl">📧</div>
+                            <div>
+                                <h3 class="font-semibold text-gray-800">メールアドレス変更</h3>
+                                <p class="text-sm text-gray-600">メールアドレスを変更する</p>
+                            </div>
+                        </a>
+                        <a th:href="@{/profile/edit/password}" class="flex items-center gap-3 p-4 bg-white rounded-md border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all no-underline">
+                            <div class="text-2xl">🔒</div>
+                            <div>
+                                <h3 class="font-semibold text-gray-800">パスワード変更</h3>
+                                <p class="text-sm text-gray-600">パスワードを変更する</p>
+                            </div>
+                        </a>
+                    </div>
                 </div>
             </div>
 

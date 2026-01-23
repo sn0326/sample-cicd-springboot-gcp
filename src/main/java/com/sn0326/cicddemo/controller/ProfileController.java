@@ -133,10 +133,10 @@ public class ProfileController {
     }
 
     /**
-     * プロフィール編集ページを表示
+     * メールアドレス変更ページを表示
      */
-    @GetMapping("/edit")
-    public String editProfile(Model model, Authentication authentication) {
+    @GetMapping("/edit/email")
+    public String editEmail(Model model, Authentication authentication) {
         String username = authentication.getName();
         model.addAttribute("username", username);
 
@@ -144,7 +144,18 @@ public class ProfileController {
         String email = userRepository.findEmailByUsername(username);
         model.addAttribute("currentEmail", email != null ? email : "未設定");
 
-        return "profile-edit";
+        return "profile-edit-email";
+    }
+
+    /**
+     * パスワード変更ページを表示
+     */
+    @GetMapping("/edit/password")
+    public String editPassword(Model model, Authentication authentication) {
+        String username = authentication.getName();
+        model.addAttribute("username", username);
+
+        return "profile-edit-password";
     }
 
     /**
@@ -164,7 +175,7 @@ public class ProfileController {
             // パスワード確認チェック
             if (!newPassword.equals(confirmPassword)) {
                 redirectAttributes.addFlashAttribute("passwordError", "新しいパスワードが一致しません");
-                return "redirect:/profile/edit";
+                return "redirect:/profile/edit/password";
             }
 
             // パスワード変更実行
@@ -181,7 +192,7 @@ public class ProfileController {
             log.error("Unexpected error during password change for user: {}", username, e);
         }
 
-        return "redirect:/profile/edit";
+        return "redirect:/profile/edit/password";
     }
 
     /**
@@ -200,19 +211,19 @@ public class ProfileController {
             // メールアドレスのバリデーション
             if (newEmail == null || newEmail.isBlank()) {
                 redirectAttributes.addFlashAttribute("emailError", "メールアドレスを入力してください");
-                return "redirect:/profile/edit";
+                return "redirect:/profile/edit/email";
             }
 
             if (!newEmail.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {
                 redirectAttributes.addFlashAttribute("emailError", "有効なメールアドレスを入力してください");
-                return "redirect:/profile/edit";
+                return "redirect:/profile/edit/email";
             }
 
             // 現在のメールアドレスと同じかチェック
             String currentEmail = userRepository.findEmailByUsername(username);
             if (newEmail.equals(currentEmail)) {
                 redirectAttributes.addFlashAttribute("emailError", "現在のメールアドレスと同じです");
-                return "redirect:/profile/edit";
+                return "redirect:/profile/edit/email";
             }
 
             // メールアドレス変更リクエスト実行
@@ -230,6 +241,6 @@ public class ProfileController {
             log.error("Unexpected error during email change request for user: {}", username, e);
         }
 
-        return "redirect:/profile/edit";
+        return "redirect:/profile/edit/email";
     }
 }
