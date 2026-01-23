@@ -1,6 +1,8 @@
 package com.sn0326.cicddemo.service;
 
 import com.sn0326.cicddemo.dto.UserInfo;
+import com.sn0326.cicddemo.exception.InvalidPasswordException;
+import com.sn0326.cicddemo.exception.UserValidationException;
 import com.sn0326.cicddemo.service.notification.SecurityNotificationService;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.GrantedAuthority;
@@ -59,7 +61,7 @@ public class AdminUserManagementService {
      */
     public UserInfo getUserInfo(String username) {
         if (!userDetailsManager.userExists(username)) {
-            throw new IllegalArgumentException("ユーザーが存在しません: " + username);
+            throw new UserValidationException("ユーザーが存在しません: " + username);
         }
 
         UserDetails userDetails = userDetailsManager.loadUserByUsername(username);
@@ -77,16 +79,16 @@ public class AdminUserManagementService {
     public void createUser(String username, String password, List<String> roles, boolean enabled) {
         // バリデーション
         if (username == null || username.trim().isEmpty()) {
-            throw new IllegalArgumentException("ユーザー名は必須です");
+            throw new UserValidationException("ユーザー名は必須です");
         }
         if (password == null || password.length() < 8) {
-            throw new IllegalArgumentException("パスワードは8文字以上必要です");
+            throw new InvalidPasswordException("パスワードは8文字以上必要です");
         }
         if (userDetailsManager.userExists(username)) {
-            throw new IllegalArgumentException("ユーザー名 '" + username + "' は既に存在します");
+            throw new UserValidationException("ユーザー名 '" + username + "' は既に存在します");
         }
         if (roles == null || roles.isEmpty()) {
-            throw new IllegalArgumentException("少なくとも1つのロールを選択してください");
+            throw new UserValidationException("少なくとも1つのロールを選択してください");
         }
 
         // 権限リストを作成
@@ -117,11 +119,11 @@ public class AdminUserManagementService {
     public void deleteUser(String username, String currentUsername) {
         // 自分自身を削除できないようにする
         if (username.equals(currentUsername)) {
-            throw new IllegalArgumentException("自分自身を削除することはできません");
+            throw new UserValidationException("自分自身を削除することはできません");
         }
 
         if (!userDetailsManager.userExists(username)) {
-            throw new IllegalArgumentException("ユーザーが存在しません: " + username);
+            throw new UserValidationException("ユーザーが存在しません: " + username);
         }
 
         userDetailsManager.deleteUser(username);
@@ -133,10 +135,10 @@ public class AdminUserManagementService {
     @Transactional
     public void resetPassword(String username, String newPassword) {
         if (!userDetailsManager.userExists(username)) {
-            throw new IllegalArgumentException("ユーザーが存在しません: " + username);
+            throw new UserValidationException("ユーザーが存在しません: " + username);
         }
         if (newPassword == null || newPassword.length() < 8) {
-            throw new IllegalArgumentException("パスワードは8文字以上必要です");
+            throw new InvalidPasswordException("パスワードは8文字以上必要です");
         }
 
         // 既存のユーザー情報を取得
@@ -183,7 +185,7 @@ public class AdminUserManagementService {
     public void disableUser(String username, String currentUsername) {
         // 自分自身を無効化できないようにする
         if (username.equals(currentUsername)) {
-            throw new IllegalArgumentException("自分自身を無効化することはできません");
+            throw new UserValidationException("自分自身を無効化することはできません");
         }
 
         updateUserEnabledStatus(username, false);
@@ -200,7 +202,7 @@ public class AdminUserManagementService {
      */
     private void updateUserEnabledStatus(String username, boolean enabled) {
         if (!userDetailsManager.userExists(username)) {
-            throw new IllegalArgumentException("ユーザーが存在しません: " + username);
+            throw new UserValidationException("ユーザーが存在しません: " + username);
         }
 
         // 既存のユーザー情報を取得
@@ -231,7 +233,7 @@ public class AdminUserManagementService {
     @Transactional
     public void unlockAccount(String username) {
         if (!userDetailsManager.userExists(username)) {
-            throw new IllegalArgumentException("ユーザーが存在しません: " + username);
+            throw new UserValidationException("ユーザーが存在しません: " + username);
         }
 
         lockoutService.unlockAccount(username);
@@ -242,7 +244,7 @@ public class AdminUserManagementService {
      */
     public boolean isAccountLocked(String username) {
         if (!userDetailsManager.userExists(username)) {
-            throw new IllegalArgumentException("ユーザーが存在しません: " + username);
+            throw new UserValidationException("ユーザーが存在しません: " + username);
         }
 
         return lockoutService.isAccountLocked(username);

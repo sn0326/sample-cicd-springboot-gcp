@@ -8,7 +8,7 @@ package com.sn0326.cicddemo.exception;
  * - トークンの有効期限が切れている
  * - トークンが既に使用済み
  */
-public class InvalidTokenException extends RuntimeException {
+public class InvalidTokenException extends BusinessException {
 
     /**
      * コンストラクタ

@@ -38,25 +38,16 @@ public class ForcePasswordChangeController {
 
         String username = authentication.getName();
 
-        try {
-            // パスワード確認
-            if (!newPassword.equals(confirmPassword)) {
-                redirectAttributes.addFlashAttribute("error", "新しいパスワードと確認パスワードが一致しません");
-                return "redirect:/force-change-password";
-            }
-
-            // パスワード変更（現在のパスワード不要）
-            forcePasswordChangeService.changePasswordWithoutCurrentPassword(username, newPassword);
-
-            redirectAttributes.addFlashAttribute("success", "パスワードが正常に変更されました");
-            return "redirect:/home";
-
-        } catch (IllegalArgumentException e) {
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
-            return "redirect:/force-change-password";
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "パスワード変更中にエラーが発生しました");
+        // パスワード確認
+        if (!newPassword.equals(confirmPassword)) {
+            redirectAttributes.addFlashAttribute("error", "新しいパスワードと確認パスワードが一致しません");
             return "redirect:/force-change-password";
         }
+
+        // パスワード変更（現在のパスワード不要）
+        forcePasswordChangeService.changePasswordWithoutCurrentPassword(username, newPassword);
+
+        redirectAttributes.addFlashAttribute("success", "パスワードが正常に変更されました");
+        return "redirect:/home";
     }
 }

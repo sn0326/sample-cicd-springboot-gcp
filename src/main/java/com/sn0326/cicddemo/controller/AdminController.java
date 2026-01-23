@@ -3,6 +3,7 @@ package com.sn0326.cicddemo.controller;
 import com.sn0326.cicddemo.dto.AdminResetPasswordRequest;
 import com.sn0326.cicddemo.dto.CreateUserRequest;
 import com.sn0326.cicddemo.dto.UserInfo;
+import com.sn0326.cicddemo.exception.BusinessException;
 import com.sn0326.cicddemo.service.AdminUserManagementService;
 import com.sn0326.cicddemo.service.LastLoginService;
 import jakarta.validation.Valid;
@@ -92,7 +93,7 @@ public class AdminController {
                     "ユーザー '" + request.getUsername() + "' を作成しました");
             return "redirect:/admin/users";
 
-        } catch (IllegalArgumentException e) {
+        } catch (BusinessException e) {
             model.addAttribute("error", e.getMessage());
             model.addAttribute("createUserRequest", request);
             return "admin/user-create";
@@ -106,14 +107,10 @@ public class AdminController {
     public String deleteUser(@PathVariable String username,
                            Authentication authentication,
                            RedirectAttributes redirectAttributes) {
-        try {
-            String currentUsername = authentication.getName();
-            adminUserManagementService.deleteUser(username, currentUsername);
-            redirectAttributes.addFlashAttribute("success",
-                    "ユーザー '" + username + "' を削除しました");
-        } catch (IllegalArgumentException e) {
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
-        }
+        String currentUsername = authentication.getName();
+        adminUserManagementService.deleteUser(username, currentUsername);
+        redirectAttributes.addFlashAttribute("success",
+                "ユーザー '" + username + "' を削除しました");
         return "redirect:/admin/users";
     }
 
@@ -122,14 +119,10 @@ public class AdminController {
      */
     @GetMapping("/users/{username}/reset-password")
     public String resetPasswordForm(@PathVariable String username, Model model) {
-        try {
-            UserInfo userInfo = adminUserManagementService.getUserInfo(username);
-            model.addAttribute("userInfo", userInfo);
-            model.addAttribute("resetPasswordRequest", new AdminResetPasswordRequest());
-            return "admin/user-reset-password";
-        } catch (IllegalArgumentException e) {
-            return "redirect:/admin/users";
-        }
+        UserInfo userInfo = adminUserManagementService.getUserInfo(username);
+        model.addAttribute("userInfo", userInfo);
+        model.addAttribute("resetPasswordRequest", new AdminResetPasswordRequest());
+        return "admin/user-reset-password";
     }
 
     /**
@@ -163,7 +156,7 @@ public class AdminController {
                     "ユーザー '" + username + "' のパスワードをリセットしました");
             return "redirect:/admin/users";
 
-        } catch (IllegalArgumentException e) {
+        } catch (BusinessException e) {
             model.addAttribute("error", e.getMessage());
             model.addAttribute("resetPasswordRequest", request);
             return "admin/user-reset-password";
@@ -176,13 +169,9 @@ public class AdminController {
     @PostMapping("/users/{username}/enable")
     public String enableUser(@PathVariable String username,
                            RedirectAttributes redirectAttributes) {
-        try {
-            adminUserManagementService.enableUser(username);
-            redirectAttributes.addFlashAttribute("success",
-                    "ユーザー '" + username + "' を有効化しました");
-        } catch (IllegalArgumentException e) {
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
-        }
+        adminUserManagementService.enableUser(username);
+        redirectAttributes.addFlashAttribute("success",
+                "ユーザー '" + username + "' を有効化しました");
         return "redirect:/admin/users";
     }
 
@@ -193,14 +182,10 @@ public class AdminController {
     public String disableUser(@PathVariable String username,
                             Authentication authentication,
                             RedirectAttributes redirectAttributes) {
-        try {
-            String currentUsername = authentication.getName();
-            adminUserManagementService.disableUser(username, currentUsername);
-            redirectAttributes.addFlashAttribute("success",
-                    "ユーザー '" + username + "' を無効化しました");
-        } catch (IllegalArgumentException e) {
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
-        }
+        String currentUsername = authentication.getName();
+        adminUserManagementService.disableUser(username, currentUsername);
+        redirectAttributes.addFlashAttribute("success",
+                "ユーザー '" + username + "' を無効化しました");
         return "redirect:/admin/users";
     }
 }

@@ -1,5 +1,6 @@
 package com.sn0326.cicddemo.service;
 
+import com.sn0326.cicddemo.exception.InvalidPasswordException;
 import com.sn0326.cicddemo.repository.PasswordChangeRequirementRepository;
 import com.sn0326.cicddemo.service.notification.SecurityNotificationService;
 import com.sn0326.cicddemo.validator.PasswordValidationResult;
@@ -76,14 +77,14 @@ public class ForcePasswordChangeService {
      *
      * @param username ユーザー名
      * @param newPassword 新しいパスワード
-     * @throws IllegalArgumentException パスワード検証に失敗した場合
+     * @throws InvalidPasswordException パスワード検証に失敗した場合
      */
     public void changePasswordWithoutCurrentPassword(String username, String newPassword) {
         // 新しいパスワードを検証
         PasswordValidationResult validationResult = passwordValidator.validate(newPassword, username);
 
         if (!validationResult.isValid()) {
-            throw new IllegalArgumentException(validationResult.getErrorMessage());
+            throw new InvalidPasswordException(validationResult.getErrorMessage());
         }
 
         // ユーザー情報を取得

@@ -1,5 +1,6 @@
 package com.sn0326.cicddemo.controller;
 
+import com.sn0326.cicddemo.exception.InvalidPasswordException;
 import com.sn0326.cicddemo.exception.InvalidTokenException;
 import com.sn0326.cicddemo.exception.RateLimitExceededException;
 import com.sn0326.cicddemo.service.PasswordResetService;
@@ -126,7 +127,7 @@ public class PasswordResetController {
             model.addAttribute("error", e.getMessage());
             return "reset-password-error";
 
-        } catch (IllegalArgumentException e) {
+        } catch (InvalidPasswordException e) {
             // パスワードバリデーションエラー
             model.addAttribute("token", token);
             model.addAttribute("error", e.getMessage());

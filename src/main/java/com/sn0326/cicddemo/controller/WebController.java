@@ -87,26 +87,18 @@ public class WebController {
     public String changePassword(@ModelAttribute ChangePasswordRequest request,
                                   Authentication authentication,
                                   RedirectAttributes redirectAttributes) {
-        try {
-            if (!request.getNewPassword().equals(request.getConfirmPassword())) {
-                redirectAttributes.addFlashAttribute("error", "新しいパスワードと確認パスワードが一致しません");
-                return "redirect:/change-password";
-            }
-
-            passwordChangeService.changePassword(
-                    authentication.getName(),
-                    request.getCurrentPassword(),
-                    request.getNewPassword()
-            );
-
-            redirectAttributes.addFlashAttribute("success", "パスワードが正常に変更されました");
-            return "redirect:/home";
-        } catch (IllegalArgumentException e) {
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
-            return "redirect:/change-password";
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "パスワード変更中にエラーが発生しました");
+        if (!request.getNewPassword().equals(request.getConfirmPassword())) {
+            redirectAttributes.addFlashAttribute("error", "新しいパスワードと確認パスワードが一致しません");
             return "redirect:/change-password";
         }
+
+        passwordChangeService.changePassword(
+                authentication.getName(),
+                request.getCurrentPassword(),
+                request.getNewPassword()
+        );
+
+        redirectAttributes.addFlashAttribute("success", "パスワードが正常に変更されました");
+        return "redirect:/home";
     }
 }

@@ -1,6 +1,7 @@
 package com.sn0326.cicddemo.controller;
 
 import com.sn0326.cicddemo.dto.OidcConnectionInfo;
+import com.sn0326.cicddemo.exception.InvalidPasswordException;
 import com.sn0326.cicddemo.exception.RateLimitExceededException;
 import com.sn0326.cicddemo.model.OidcProvider;
 import com.sn0326.cicddemo.repository.UserRepository;
@@ -122,12 +123,8 @@ public class ProfileController {
 
         String username = authentication.getName();
 
-        try {
-            oidcConnectionService.deleteConnection(username, OidcProvider.GOOGLE);
-            redirectAttributes.addFlashAttribute("successMessage", "Google連携を解除しました");
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "連携解除に失敗しました: " + e.getMessage());
-        }
+        oidcConnectionService.deleteConnection(username, OidcProvider.GOOGLE);
+        redirectAttributes.addFlashAttribute("successMessage", "Google連携を解除しました");
 
         return "redirect:/profile";
     }
@@ -171,26 +168,17 @@ public class ProfileController {
 
         String username = authentication.getName();
 
-        try {
-            // パスワード確認チェック
-            if (!newPassword.equals(confirmPassword)) {
-                redirectAttributes.addFlashAttribute("passwordError", "新しいパスワードが一致しません");
-                return "redirect:/profile/edit/password";
-            }
-
-            // パスワード変更実行
-            passwordChangeService.changePassword(username, currentPassword, newPassword);
-
-            redirectAttributes.addFlashAttribute("passwordSuccess", "パスワードを変更しました");
-            log.info("Password changed successfully for user: {}", username);
-
-        } catch (IllegalArgumentException e) {
-            redirectAttributes.addFlashAttribute("passwordError", e.getMessage());
-            log.warn("Password change failed for user {}: {}", username, e.getMessage());
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("passwordError", "パスワード変更に失敗しました");
-            log.error("Unexpected error during password change for user: {}", username, e);
+        // パスワード確認チェック
+        if (!newPassword.equals(confirmPassword)) {
+            redirectAttributes.addFlashAttribute("passwordError", "新しいパスワードが一致しません");
+            return "redirect:/profile/edit/password";
         }
+
+        // パスワード変更実行
+        passwordChangeService.changePassword(username, currentPassword, newPassword);
+
+        redirectAttributes.addFlashAttribute("passwordSuccess", "パスワードを変更しました");
+        log.info("Password changed successfully for user: {}", username);
 
         return "redirect:/profile/edit/password";
     }
@@ -207,39 +195,30 @@ public class ProfileController {
 
         String username = authentication.getName();
 
-        try {
-            // メールアドレスのバリデーション
-            if (newEmail == null || newEmail.isBlank()) {
-                redirectAttributes.addFlashAttribute("emailError", "メールアドレスを入力してください");
-                return "redirect:/profile/edit/email";
-            }
-
-            if (!newEmail.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {
-                redirectAttributes.addFlashAttribute("emailError", "有効なメールアドレスを入力してください");
-                return "redirect:/profile/edit/email";
-            }
-
-            // 現在のメールアドレスと同じかチェック
-            String currentEmail = userRepository.findEmailByUsername(username);
-            if (newEmail.equals(currentEmail)) {
-                redirectAttributes.addFlashAttribute("emailError", "現在のメールアドレスと同じです");
-                return "redirect:/profile/edit/email";
-            }
-
-            // メールアドレス変更リクエスト実行
-            emailChangeService.requestEmailChange(username, newEmail, currentPassword);
-
-            redirectAttributes.addFlashAttribute("emailSuccess",
-                    "確認メールを " + newEmail + " に送信しました。メール内のリンクをクリックして変更を完了してください。");
-            log.info("Email change requested for user: {} to {}", username, newEmail);
-
-        } catch (RateLimitExceededException e) {
-            redirectAttributes.addFlashAttribute("emailError", e.getMessage());
-            log.warn("Email change rate limit exceeded for user: {}", username);
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("emailError", "メールアドレス変更リクエストに失敗しました");
-            log.error("Unexpected error during email change request for user: {}", username, e);
+        // メールアドレスのバリデーション
+        if (newEmail == null || newEmail.isBlank()) {
+            redirectAttributes.addFlashAttribute("emailError", "メールアドレスを入力してください");
+            return "redirect:/profile/edit/email";
         }
+
+        if (!newEmail.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {
+            redirectAttributes.addFlashAttribute("emailError", "有効なメールアドレスを入力してください");
+            return "redirect:/profile/edit/email";
+        }
+
+        // 現在のメールアドレスと同じかチェック
+        String currentEmail = userRepository.findEmailByUsername(username);
+        if (newEmail.equals(currentEmail)) {
+            redirectAttributes.addFlashAttribute("emailError", "現在のメールアドレスと同じです");
+            return "redirect:/profile/edit/email";
+        }
+
+        // メールアドレス変更リクエスト実行
+        emailChangeService.requestEmailChange(username, newEmail, currentPassword);
+
+        redirectAttributes.addFlashAttribute("emailSuccess",
+                "確認メールを " + newEmail + " に送信しました。メール内のリンクをクリックして変更を完了してください。");
+        log.info("Email change requested for user: {} to {}", username, newEmail);
 
         return "redirect:/profile/edit/email";
     }

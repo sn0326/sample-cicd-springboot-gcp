@@ -1,6 +1,8 @@
 package com.sn0326.cicddemo.service;
 
 import com.sn0326.cicddemo.dto.OidcConnectionInfo;
+import com.sn0326.cicddemo.exception.ResourceNotFoundException;
+import com.sn0326.cicddemo.exception.UserValidationException;
 import com.sn0326.cicddemo.model.OidcProvider;
 import com.sn0326.cicddemo.model.UserOidcConnection;
 import com.sn0326.cicddemo.repository.UserOidcConnectionRepository;
@@ -40,7 +42,7 @@ public class OidcConnectionService {
 
         // ユーザーが存在するか確認
         if (!userDetailsManager.userExists(username)) {
-            throw new IllegalArgumentException("ユーザー '" + username + "' が存在しません");
+            throw new UserValidationException("ユーザー '" + username + "' が存在しません");
         }
 
         // 既存の連携を確認
@@ -112,7 +114,7 @@ public class OidcConnectionService {
     public void disableConnection(String username, OidcProvider provider) {
         UserOidcConnection connection = oidcConnectionRepository
                 .findByUsernameAndProvider(username, provider.getValue())
-                .orElseThrow(() -> new IllegalArgumentException("連携が見つかりません"));
+                .orElseThrow(() -> new ResourceNotFoundException("連携が見つかりません"));
 
         connection.setEnabled(false);
         oidcConnectionRepository.save(connection);
@@ -125,7 +127,7 @@ public class OidcConnectionService {
     public void deleteConnection(String username, OidcProvider provider) {
         UserOidcConnection connection = oidcConnectionRepository
                 .findByUsernameAndProvider(username, provider.getValue())
-                .orElseThrow(() -> new IllegalArgumentException("連携が見つかりません"));
+                .orElseThrow(() -> new ResourceNotFoundException("連携が見つかりません"));
 
         oidcConnectionRepository.delete(connection);
     }
